@@ -8,6 +8,7 @@ const workOrder = { id: 'fixture-order', title: 'Fixture · rounded pocket revie
 const job = { id: 'fixture-job', resourceId: 'fixture-machine', title: 'DWP611 pocket toolpath', processType: 'cnc', status: 'queued', queuePosition: 1, sourceRef: { files: [{ artifactId: 'fixture-code', name: 'rounded-pocket.nc' }] } };
 const validations = [];
 const productionRecords = [];
+const usageEvents = new Map();
 http.createServer((req, res) => {
   if (req.headers.authorization !== 'Bearer fixture-only') { res.writeHead(401); res.end(); return; }
   const url = new URL(req.url, 'http://localhost');
@@ -16,6 +17,14 @@ http.createServer((req, res) => {
   req.on('data', c => chunks.push(c));
   req.on('end', () => {
     res.setHeader('Content-Type', 'application/json');
+    if (route === 'resources/fixture-machine/usage' && req.method === 'POST') {
+      const body = JSON.parse(Buffer.concat(chunks).toString());
+      body.events.forEach(event => usageEvents.set(event.eventId, event));
+      res.end(JSON.stringify({ data: { accepted: body.events.map(event => event.eventId) } })); return;
+    }
+    if (route === 'resources/fixture-machine/usage' && req.method === 'GET') {
+      res.end(JSON.stringify({ data: { events: Array.from(usageEvents.values()) } })); return;
+    }
     if (route === 'resources' && req.method === 'GET') {
       res.end(JSON.stringify({ data: { resources: [{ id: 'fixture-machine', status: 'available', policy: { cncjsAccess: { version: 1, grants: [{ enabled: true, operatorId: 'fixture-operator', operatorName: 'Demo operator', expiresAt: '2099-01-01T00:00:00Z', badgeHash: crypto.createHash('sha256').update('fixture:fixture-machine:DEMO1234').digest('hex') }] } } }] } })); return;
     }

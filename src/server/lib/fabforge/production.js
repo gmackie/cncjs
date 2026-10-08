@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { configuration, FabForgeError, request, segment } from './client';
 
 // Production reports are operator statements, never inferred from sender progress.
@@ -64,6 +65,7 @@ export const createProduction = ({ remote = request, config = configuration, acc
           resourceId,
           processType: job.processType,
           status: 'draft',
+          idempotencyKey: crypto.createHash('sha256').update(reportKey).digest('hex'),
           outcome: input.outcome,
           quantity: input.quantity,
           unit: 'each',

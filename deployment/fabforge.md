@@ -191,3 +191,8 @@ Follow-ups: expose durable idempotency in FabForge's v0 production API, support 
 outcome batches, and reconcile actual controller runs and cutting time. Managed badge
 enrollment/qualification remains a separate FabForge feature. No production records
 were fabricated during validation; test writes use only the localhost fixture.
+
+The companion FabForge machine-integration change exposes a request-scoped
+`idempotencyKey` on production-record creation. CNCjs now sends a stable key derived
+from operator session/release/hash. Its conservative local ambiguous-save guard
+remains compatible with older FabForge deployments that ignore this optional field.

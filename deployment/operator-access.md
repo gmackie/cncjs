@@ -125,3 +125,29 @@ are denied. Do not probe a real serial port as an authorization test.
 Until a real badge is enrolled and commissioning is completed, the shop is a viewer
 with no production operator access. This is intentional. To roll back, restore the
 UI, route table and socket engine from the pre-badge archive and restart while idle.
+
+## Machine administration and usage upload (next FabForge release)
+
+FabForge's companion PR adds `/machines` for workspace owners/admins to enroll,
+replace and revoke member badges. Enrollment requires a masked scan, expiry within
+one year, and explicit machine-training confirmation. The Pi token cannot administer
+grants. This replaces the SQL helper once the companion release is deployed.
+
+The CNCjs **Operator usage** page (`/#/usage`) shows the latest 200 journal events
+and summed ended-session access time. Commands are requests logged before controller
+execution, not proof of successful machining. Missing session-end events can mean
+an active session or an interrupted process. This is not a cutting-time report.
+
+New journal events receive persistent UUIDs and workspace/resource binding. Set
+`CNCJS_USAGE_SYNC=1` in the service environment only after deploying FabForge's usage
+API and `0004_machine_usage.sql`. A 30-second loop sends at most 100 events per batch
+and advances a private atomic cursor only after acknowledgement. Retries use the
+same IDs, so FabForge deduplicates them. Upload outages never discard local events
+or unlock controls. The usage page shows pending errors and last successful check.
+Old events without UUIDs stay local; they are not automatically backfilled.
+
+Retain the journal together with `.fabforge-cursor.json`. Rotation, truncation or
+changing the FabForge binding stops uploads with a visible error; reconcile/archive
+the old journal and cursor before starting a new pair. Do not delete pending logs
+to clear an upload error. The bridge sends only allowlisted metadata, not raw badge
+IDs, capability tokens, source payloads or raw G-code.

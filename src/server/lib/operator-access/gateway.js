@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import access from './service';
+import { recentUsage, usageSync } from './usage';
 import store from '../../store';
 import { createService } from '../fabforge/service';
 import { configuration } from '../fabforge/client';
@@ -31,7 +32,13 @@ const respond = (action) => async (req, res) => {
     res.status(err.status || 503).send({ msg: err.message });
   }
 };
+let usageTimer;
 export const installRoutes = (app, prefix) => {
+  if (!usageTimer) {
+    usageTimer = setInterval(() => usageSync.sync(), 30000);
+    usageTimer.unref();
+  }
+  app.get(`${prefix}/operator-access/usage`, respond(() => ({ ...recentUsage(), synchronization: usageSync.status() })));
   app.post(
     `${prefix}/operator-access/production-records`,
     respond((req) => production(tokenFrom(req), req.body))

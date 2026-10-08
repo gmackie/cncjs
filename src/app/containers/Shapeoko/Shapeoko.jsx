@@ -7,6 +7,7 @@ import FabForge from '../FabForge/FabForge';
 import AccessPanel from '../OperatorAccess/AccessPanel';
 import MachineDrawing from './MachineDrawing';
 import MachineControls from './MachineControls';
+import Usage from './Usage';
 import styles from './index.styl';
 
 const pages = [
@@ -15,6 +16,7 @@ const pages = [
   ['/milling', '03', 'DWP611 milling'],
   ['/laser', '04', 'J Tech engraving'],
   ['/workspace', '05', 'Machine controls'],
+  ['/usage', '06', 'Operator usage'],
 ];
 export default class Shapeoko extends PureComponent {
   static propTypes = {
@@ -107,10 +109,11 @@ export default class Shapeoko extends PureComponent {
     const milling = pathname === '/milling';
     const queue = pathname === '/fabforge';
     const controls = pathname === '/workspace';
+    const usage = pathname === '/usage';
     const active = orders.filter(
       (order) => !['complete', 'cancelled'].includes(order.status)
     );
-    const title = { '/fabforge': 'Work queue', '/workspace': 'Machine controls', '/laser': 'Light, precisely placed.', '/milling': 'Make the first cut count.' }[pathname] || 'Your workshop, in view.';
+    const title = { '/usage': 'Operator usage', '/fabforge': 'Work queue', '/workspace': 'Machine controls', '/laser': 'Light, precisely placed.', '/milling': 'Make the first cut count.' }[pathname] || 'Your workshop, in view.';
     const eyebrow = { '/laser': 'J TECH PHOTONICS / 7W DIODE', '/milling': 'DEWALT DWP611 / ⅛″ TOOLING', '/fabforge': 'FABFORGE / PRODUCTION' }[pathname] || 'SHAPEOKO 3 XL / MACHINE 01';
     const units = Number(get(machine, 'controller.settings.settings.$13')) === 1 ? 'in' : 'mm';
     return (
@@ -221,7 +224,8 @@ export default class Shapeoko extends PureComponent {
               access={access}
             />
           )}
-          {!queue && !controls && (
+          {usage && <Usage />}
+          {!queue && !controls && !usage && (
             <div>
               <div className={styles.heroGrid}>
                 <section className={styles.machineCard}>

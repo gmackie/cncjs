@@ -1,7 +1,5 @@
 import crypto from 'crypto';
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
+import { appendUsage } from './usage';
 import { configuration, FabForgeError, request } from '../fabforge/client';
 
 const digest = (value) => crypto.createHash('sha256').update(value).digest('hex');
@@ -9,19 +7,12 @@ export const badgeDigest = (workspaceId, resourceId, badge) => digest(`${workspa
 const fail = (message, status = 403) => {
   throw new FabForgeError(message, status);
 };
-const defaultAudit = (event) => {
-  const file =
-    process.env.CNCJS_USAGE_LOG ||
-    path.join(os.homedir(), '.cncjs-usage.jsonl');
-  fs.appendFileSync(file, JSON.stringify(event) + '\n', { mode: 0o600 });
-};
-
 // One machine, one operator lease. Tokens exist only in memory; restart locks controls.
 export const createAccess = ({
   remote = request,
   config = configuration,
   now = Date.now,
-  audit = defaultAudit,
+  audit = appendUsage,
   enabled = () => process.env.CNCJS_BADGE_ACCESS !== '0',
 } = {}) => {
   let lease = null;
