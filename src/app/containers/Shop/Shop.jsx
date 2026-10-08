@@ -5,6 +5,7 @@ import api from 'app/api';
 import controller from 'app/lib/controller';
 import i18n from 'app/lib/i18n';
 import styles from './index.styl';
+import Camera from './Camera';
 import { canRunToolMacro } from './machine-state';
 
 const events = ['connect', 'disconnect', 'serialport:open', 'serialport:close', 'controller:settings', 'workflow:state'];
@@ -61,7 +62,7 @@ class Shop extends PureComponent {
         type: controller.type,
         machine: controller.state,
         settings: controller.settings,
-      workflow: controller.workflow.state,
+        workflow: controller.workflow.state,
         acknowledged: controller.connected && controller.port ? this.state.acknowledged : false
       });
     };
@@ -134,7 +135,8 @@ class Shop extends PureComponent {
         ['overview', i18n._('Overview')],
         ['milling', i18n._('Milling')],
         ['bitsetter', i18n._('BitSetter')],
-        ['laser', i18n._('Laser')]
+        ['laser', i18n._('Laser')],
+        ['camera', i18n._('Camera')]
       ];
       return (
         <div className={styles.shop}>
@@ -160,48 +162,72 @@ class Shop extends PureComponent {
             <div><span>{i18n._('OPERATING MODE')}</span><strong>{laserMode === undefined ? i18n._('Unknown') : operatingMode}</strong><small>{i18n._('Reported by the controller ($32)')}</small></div>
             <div><span>{i18n._('TOOL SETTING')}</span><strong>BitSetter</strong><small>{i18n._('Saved macros • verify before use')}</small></div>
           </div>
-          <div className={styles.columns}>
-            <section className={styles.panel}>
-              <div className={styles.sectionHeading}><h2>{i18n._('Work position')}</h2><span>{live ? units : '—'}</span></div>
-              <div className={styles.coordinates}>
-                {['x', 'y', 'z'].map(axis => {
-                  const value = live ? get(machine, ['status', 'wpos', axis]) : undefined;
-                  return <div key={axis}><span>{axis.toUpperCase()}</span><strong>{value !== undefined && Number.isFinite(Number(value)) ? Number(value).toFixed(3) : '—'}</strong></div>;
+          {tab === 'camera' && <Camera />}
+          <section className={styles.panel}>
+            <div className={styles.sectionHeading}>
+              <h2>{i18n._('Machine readiness')}</h2>
+              <span className={styles.tag}>{live ? `Grbl ${settings.version || '—'}` : i18n._('NOT CONNECTED')}</span>
+            </div>
+            {!live && <p>{i18n._('Open machine controls, select the Shapeoko serial port and connect at 115200 baud. This dashboard never opens a serial port automatically.')}</p>}
+            {live && status === 'Alarm' && <p role="status">{i18n._('Controller is locked. With homing enabled, clear the machine and home it from the workspace before setting tools. Unlocking alone does not establish machine coordinates.')}</p>}
+            {live && (
+              <div>
+                <p>{i18n._('Configured travel (X / Y / Z): {{x}} / {{y}} / {{z}} mm.', {
+                  x: get(settings, 'settings.$130', '—'), y: get(settings, 'settings.$131', '—'), z: get(settings, 'settings.$132', '—')
                 })}
+                </p>
+                {Number(get(settings, 'settings.$131')) > 500 && <p className={styles.error}>{i18n._('The stored Y travel is unusually large for a Shapeoko 3 XL. Measure usable travel and verify $131 before relying on travel limits. No setting has been changed.')}</p>}
+                <p className={styles.muted}>{i18n._('Homing ($22): {{homing}} · Soft limits ($20): {{soft}} · Hard limits ($21): {{hard}}', {
+                  homing: get(settings, 'settings.$22', '—'), soft: get(settings, 'settings.$20', '—'), hard: get(settings, 'settings.$21', '—')
+                })}
+                </p>
               </div>
-              <p className={styles.muted}>{i18n._('Live work coordinates. Homing and work zero are separate steps.')}</p>
-              <Link className={styles.secondary} to="/workspace">{i18n._('Jog, home & set zero')} <span aria-hidden="true">→</span></Link>
-            </section>
-            <section className={styles.panel}>
-              <div className={styles.sectionHeading}><h2>{tab === 'laser' ? i18n._('J Tech 7W laser setup') : preparationTitle}</h2><span className={styles.tag}>{tab === 'laser' ? i18n._('SETUP REQUIRED') : i18n._('PREPARATION')}</span></div>
-              {tab === 'laser' ? (
-                <div>
-                  <p>{i18n._('Connect the J Tech driver to the correct PWM and GND pins for your Carbide board revision. Confirm the laser model, mount clearance and focus distance using its instructions.')}</p>
-                  <ol className={styles.steps}>
-                    <li>{i18n._('Verify the mount, cable routing and full homing clearance with laser power disconnected.')}</li>
-                    <li>{i18n._('Confirm enclosure, suitable laser eyewear, ventilation and driver interlock before enabling the laser.')}</li>
-                    <li>{i18n._('Read the Grbl version and $30, $31, $32 settings. Match the CAM power scale to $30; use laser mode only on supported firmware.')}</li>
-                    <li>{i18n._('Set a laser work origin and focus for this head. Do not run router tool-setting macros with the laser mounted.')}</li>
-                  </ol>
-                  <a
-                    className={styles.secondary} href="https://jtechphotonics.com/?page_id=3145" target="_blank"
-                    rel="noopener noreferrer"
-                  >{i18n._('J Tech Shapeoko installation guide')} ↗
-                  </a>
+            )}
+          </section>
+          {tab !== 'camera' && (
+            <div className={styles.columns}>
+              <section className={styles.panel}>
+                <div className={styles.sectionHeading}><h2>{i18n._('Work position')}</h2><span>{live ? units : '—'}</span></div>
+                <div className={styles.coordinates}>
+                  {['x', 'y', 'z'].map(axis => {
+                    const value = live ? get(machine, ['status', 'wpos', axis]) : undefined;
+                    return <div key={axis}><span>{axis.toUpperCase()}</span><strong>{value !== undefined && Number.isFinite(Number(value)) ? Number(value).toFixed(3) : '—'}</strong></div>;
+                  })}
                 </div>
-              ) : (
-                <div>
-                  <ol className={styles.steps}>
-                    <li><strong>{i18n._('Home the machine.')}</strong> {i18n._('Clear the travel area and establish machine coordinates in the workspace.')}</li>
-                    <li><strong>{i18n._('Set the first tool.')}</strong> {i18n._('Verify the saved probe location and clearance, then run Initial Tool Set.')}</li>
-                    <li><strong>{i18n._('Set the work origin.')}</strong> {i18n._('Set X, Y and Z for the stock and check the toolpath before starting.')}</li>
-                    <li><strong>{i18n._('Keep the reference.')}</strong> {i18n._('Use New Tool Set for subsequent tools only after a successful initial reference in this controller session.')}</li>
-                  </ol>
-                  <p className={styles.muted}>{i18n._('A reconnect or controller reset requires the reference to be checked again. This dashboard does not infer that a probe succeeded.')}</p>
-                </div>
-              )}
-            </section>
-          </div>
+                <p className={styles.muted}>{i18n._('Live work coordinates. Homing and work zero are separate steps.')}</p>
+                <Link className={styles.secondary} to="/workspace">{i18n._('Jog, home & set zero')} <span aria-hidden="true">→</span></Link>
+              </section>
+              <section className={styles.panel}>
+                <div className={styles.sectionHeading}><h2>{tab === 'laser' ? i18n._('J Tech 7W laser setup') : preparationTitle}</h2><span className={styles.tag}>{tab === 'laser' ? i18n._('SETUP REQUIRED') : i18n._('PREPARATION')}</span></div>
+                {tab === 'laser' ? (
+                  <div>
+                    <p>{i18n._('Connect the J Tech driver to the correct PWM and GND pins for your Carbide board revision. Confirm the laser model, mount clearance and focus distance using its instructions.')}</p>
+                    <ol className={styles.steps}>
+                      <li>{i18n._('Verify the mount, cable routing and full homing clearance with laser power disconnected.')}</li>
+                      <li>{i18n._('Confirm enclosure, suitable laser eyewear, ventilation and driver interlock before enabling the laser.')}</li>
+                      <li>{i18n._('Read the Grbl version and $30, $31, $32 settings. Match the CAM power scale to $30; use laser mode only on supported firmware.')}</li>
+                      <li>{i18n._('Set a laser work origin and focus for this head. Do not run router tool-setting macros with the laser mounted.')}</li>
+                    </ol>
+                    <a
+                      className={styles.secondary} href="https://jtechphotonics.com/?page_id=3145" target="_blank"
+                      rel="noopener noreferrer"
+                    >{i18n._('J Tech Shapeoko installation guide')} ↗
+                    </a>
+                  </div>
+                ) : (
+                  <div>
+                    <ol className={styles.steps}>
+                      <li><strong>{i18n._('Home the machine.')}</strong> {i18n._('Clear the travel area and establish machine coordinates in the workspace.')}</li>
+                      <li><strong>{i18n._('Set the first tool.')}</strong> {i18n._('Verify the saved probe location and clearance, then run Initial Tool Set.')}</li>
+                      <li><strong>{i18n._('Set the work origin.')}</strong> {i18n._('Set X, Y and Z for the stock and check the toolpath before starting.')}</li>
+                      <li><strong>{i18n._('Keep the reference.')}</strong> {i18n._('Use New Tool Set for subsequent tools only after a successful initial reference in this controller session.')}</li>
+                    </ol>
+                    <p className={styles.muted}>{i18n._('A reconnect or controller reset requires the reference to be checked again. This dashboard does not infer that a probe succeeded.')}</p>
+                  </div>
+                )}
+              </section>
+            </div>
+          )}
           {tab === 'laser' ? (
             <section className={styles.panel}>
               <div className={styles.sectionHeading}><h2>{i18n._('Laser readiness')}</h2><span className={styles.tag}>{i18n._('NOT COMMISSIONED')}</span></div>
@@ -211,7 +237,7 @@ class Shop extends PureComponent {
               <p>{i18n._('No laser output is enabled by this page. After hardware commissioning, use the workspace to send a laser toolpath. Confirm $32=1 for laser work and restore $32=0 before milling; disconnect and remove the laser as J Tech instructs before using the router.')}</p>
               <Link className={styles.secondary} to="/workspace">{i18n._('Inspect firmware & settings')} →</Link>
             </section>
-          ) : (
+          ) : tab !== 'camera' && (
             <section className={styles.panel}>
               <div className={styles.sectionHeading}>
                 <div>

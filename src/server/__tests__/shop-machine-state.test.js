@@ -25,7 +25,7 @@ describe('Shop tool-setting motion gate', () => {
     test.each(['running', 'paused'])('blocks workflow %s', (state) => {
         expect(canRunToolMacro({ ...ready(), workflow: { state } }, true)).toBe(false);
     });
-    test.each(['1', undefined, 'invalid'])('blocks laser or unverified mode %s', ($32) => {
+    test.each(['1', undefined, null, '', false, 'invalid'])('blocks laser or unverified mode %s', ($32) => {
         expect(canRunToolMacro({ ...ready(), settings: { settings: { $32 } } }, true)).toBe(false);
     });
     test('blocks other controller types', () => {

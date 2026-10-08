@@ -74,8 +74,7 @@ Copy the archive to the Pi. Extract into
 `/home/pi/cncjs-upgrade/app/node_modules/cncjs/dist/cncjs` and restart only when idle.
 The original 1.11.5 assets are in `/home/pi/cncjs-upgrade/stock-ui.tar.gz`.
 A same-version UI update should be followed by a hard refresh because the asset
-URL prefix is derived from the cncjs version. Validate the build log: the existing
-build script does not fail fast on every subcommand failure.
+URL prefix is derived from the cncjs version. The production build now fails immediately if any build stage fails.
 
 ## Machine commissioning still required
 
@@ -91,5 +90,80 @@ controller settings. Confirm head/driver revision, wiring, focus, mount clearanc
 firmware support, power scale and laser protection before a supervised test.
 Reference: https://jtechphotonics.com/?page_id=3145
 
-Firmware identification, serial I/O under the new runtime, actual cutting/probing,
-and reboot validation were deliberately left for supervised commissioning.
+At initial deployment these checks were deferred. The follow-up below verifies firmware
+and serial I/O; actual cutting/probing and reboot validation still require supervision.
+
+## Controller verified 2026-10-07 (second session)
+
+The owner confirmed the machine was clear with router/laser power off and authorized
+connection and settings inspection. The current runtime opened `/dev/ttyACM0` through
+cncjs successfully. Read-only `$I`, `$$`, `$G`, `$#` queries reported:
+
+- Grbl `1.1f.20170131`, options `VNPR,14,128`.
+- `$32=0` (milling), `$30=1000`, `$31=0`; laser-mode support exists.
+- `$22=1` (homing enabled); startup state `Alarm`.
+- `$20=0`, `$21=0` (soft and hard limits disabled).
+- `$130=845`, `$131=850`, `$132=95` mm.
+- Spindle `M5`, coolant `M9`, probe result not established.
+
+The owner confirmed **XL**, not XXL. Stored Y travel of 850 mm needs measurement
+and correction during supervised commissioning. Do not guess a replacement or
+turn on soft limits before verifying actual usable travel. Firmware settings and
+saved probe coordinates have not been changed. The owner deferred homing; no
+homing, jog, probing or output commands were sent.
+
+A read-only snapshot is stored at `/home/pi/cncjs-upgrade/controller-inspection.json`.
+
+## USB camera preparation
+
+The owner has a camera but has not connected it yet. `/dev/video10` through
+`/dev/video16` are Pi codec/ISP devices, **not webcams**.
+
+`cncjs-camera.service` waits for `/dev/v4l/by-id/usb-*-video-index0`. Once a camera
+appears it launches MJPG-streamer bound only to `127.0.0.1:8081`. The cncjs service
+proxies `/camera/` to that stream. The mount uses cncjs's existing LAN-accessible
+proxy mechanism; camera URLs do not require the UI login. Do not expose the cncjs
+port publicly.
+
+- Dashboard **Camera → Show camera**: snapshots every 1.5 seconds, timeout/error
+  feedback, explicit off/retry controls. This is monitoring, not a safety interlock.
+- Workspace **Webcam → Settings → Raspberry Pi USB camera → Save Changes**, then
+  enable the widget: continuous MJPEG at `camera/?action=stream`.
+- Browser camera access means a camera plugged into the laptop/tablet, not the Pi.
+
+The default camera profile is native MJPEG, 640×480, 10 fps. After plugging it in:
+
+```sh
+v4l2-ctl --list-devices
+v4l2-ctl -d /dev/v4l/by-id/<your-camera>-video-index0 --list-formats-ext
+systemctl status cncjs-camera
+journalctl -u cncjs-camera -n 30 --no-pager
+```
+
+Set `CAMERA_DEVICE`, `CAMERA_RESOLUTION`, `CAMERA_FPS` in
+`/home/pi/cncjs-camera/camera.env` if necessary. For cameras without MJPEG, use
+`CAMERA_INPUT_OPTIONS=-y` for YUYV conversion (higher CPU load), then restart
+`cncjs-camera`. Actual formats, focus, mounting and image quality await the camera.
+
+Build provenance: jacksonliam/mjpg-streamer revision
+`310b29f4a94c46652b20c4b7b6e5cf24e532af39`, GPL source retained in
+`/home/pi/cncjs-camera/mjpg-streamer-experimental`. See `build-camera.sh` for the
+Buster build recipe. Only JPEG headers were extracted from the matching Debian
+package; the existing Pi libjpeg runtime is used. No OS packages were upgraded.
+
+Install the scripts and unit:
+
+```sh
+cp deployment/start-camera.sh /home/pi/cncjs-camera/
+cp deployment/camera.env.example /home/pi/cncjs-camera/camera.env
+sudo cp deployment/cncjs-camera.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now cncjs-camera
+```
+
+Use the updated `cncjs-shop.service` and compiled server proxy error handler before
+adding the camera mount. Without a camera, `/camera/?action=snapshot` returns 503
+and the CNC server stays responsive. A labeled **NOT A LIVE CAMERA** JPEG verified
+both the snapshot and multipart stream paths; this does not validate real capture.
+The fixture streamer is stopped after testing. Roll back camera support by removing
+the `/camera` mount and stopping/disabling `cncjs-camera`.

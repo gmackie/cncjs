@@ -16,6 +16,7 @@ import size from 'lodash/size';
 import trimEnd from 'lodash/trimEnd';
 import uniqWith from 'lodash/uniqWith';
 import webappengine from 'webappengine';
+import proxyError from './lib/proxy-error';
 import settings from './config/settings';
 import app from './app';
 import cncengine from './services/cncengine';
@@ -154,6 +155,8 @@ const createServer = (options, callback) => {
 
             target: target
           });
+
+          proxy.on('error', proxyError);
 
           proxy.on('proxyReq', (proxyReq, req, res, options) => {
             const originalPath = proxyReq.path || '';
