@@ -4,7 +4,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const workOrder = { id: 'fixture-order', title: 'Fixture · rounded pocket review', status: 'ready', processTypes: ['cnc'], description: 'Local API fixture — no production work order.' };
-const job = { id: 'fixture-job', title: 'DWP611 pocket toolpath', processType: 'cnc', status: 'queued', queuePosition: 1, sourceRef: { artifactId: 'fixture-code' } };
+const job = { id: 'fixture-job', title: 'DWP611 pocket toolpath', processType: 'cnc', status: 'queued', queuePosition: 1, sourceRef: { files: [{ artifactId: 'fixture-code', name: 'rounded-pocket.nc' }] } };
 const validations = [];
 http.createServer((req, res) => {
   if (req.headers.authorization !== 'Bearer fixture-only') { res.writeHead(401); res.end(); return; }
@@ -16,7 +16,7 @@ http.createServer((req, res) => {
     res.setHeader('Content-Type', 'application/json');
     if (route === 'work-orders' && req.method === 'GET') { res.end(JSON.stringify({ data: { workOrders: [workOrder] } })); return; }
     if (route === 'work-orders/fixture-order' && req.method === 'GET') {
-      res.end(JSON.stringify({ data: { workOrder, jobs: [job], setupSheets: [{ title: 'Fixture setup', stock: 'Review only', tool: '1/8 inch end mill', origin: 'Stock top, front-left' }], checklistItems: [{ label: 'Physical setup not commissioned', status: 'open' }], validations } })); return;
+      res.end(JSON.stringify({ data: { workOrder, jobs: [job], setupSheets: [{ id: 'fixture-setup', jobId: 'fixture-job', title: 'Fixture setup', setupPayload: { fields: { stock_dimensions: 'Review only', tool_list: ['1/8 inch end mill'], origin: 'Stock top, front-left', workholding: null } } }], checklistItems: [{ label: 'Physical setup not commissioned', status: 'open' }], validations } })); return;
     }
     if (route === 'artifacts/fixture-code' && req.method === 'GET') {
       res.setHeader('Content-Type', 'text/plain'); res.end(fs.readFileSync(path.join(__dirname, 'fixture.nc'))); return;

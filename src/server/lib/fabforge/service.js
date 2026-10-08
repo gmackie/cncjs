@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { configuration, FabForgeError, request, segment } from './client';
 import simulate from './simulate-async';
+import reviewSources from './review-sources';
 
 export const sourcePath = (source) => {
   if (!source || typeof source !== 'object') {
@@ -29,7 +30,7 @@ export const createService = (remote = request, config = configuration) => {
     if (!result || !result.workOrder || !Array.isArray(result.jobs)) {
       throw new FabForgeError('Invalid work-order detail.', 502);
     }
-    return result;
+    return { ...result, jobs: result.jobs.map(job => ({ ...job, reviewSources: reviewSources(result, job) })) };
   };
   const jobDetail = async (id, jobId) => {
     const result = await detail(id);

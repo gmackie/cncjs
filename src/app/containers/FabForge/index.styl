@@ -51,3 +51,10 @@
     .fields { grid-template-columns: 1fr; }
     .card { padding: 14px; }
 }
+.packet {
+    dl > div { display: grid; grid-template-columns: minmax(110px, 1fr) minmax(0, 3fr); gap: 12px; padding: 8px 0; border-bottom: 1px solid #e5ebe5; }
+    dt { text-transform: capitalize; }
+    dd { margin: 0; overflow-wrap: anywhere; }
+    li { padding: 5px 0; overflow-wrap: anywhere; }
+}
+.page select { max-width: 100%; }

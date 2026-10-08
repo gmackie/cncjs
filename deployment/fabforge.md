@@ -8,8 +8,8 @@ The integration targets the existing `/api/fabrication/v0` API at
 ## Operator workflow
 
 1. Choose an active CNC/laser Work Order, then a Job. Jobs sort by FabForge queue
-   position. Read its setup sheets, checklist and previous validations.
-2. Import a stored G-code artifact by its artifact ID, or a repository `.nc`,
+   position. Read its setup sheets, checklist and previous validations. Structured setup fields and review notes are shown directly, with missing fields marked as not specified.
+2. Choose a linked file from the Job, its setup sheets, prior job-specific reviews, or Work Order references. Duplicate references are combined; references from other jobs are excluded. You can also enter a stored G-code artifact ID manually, or a repository `.nc`,
    `.gcode` or `.tap` file pinned to a full commit SHA. Matching fields in the Job's
    `sourceRef` prefill the form; other source-ref shapes require explicit selection.
 3. Review top XY, front XZ and isometric backplots. Dashed amber lines are rapids;

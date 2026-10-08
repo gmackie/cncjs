@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react';
 import { Link } from 'react-router-dom';
 import api from 'app/api';
 import Toolpath from './Toolpath';
+import ProductionPacket from './ProductionPacket';
 import styles from './index.styl';
 
 const pretty = (value) => JSON.stringify(value, null, 2);
@@ -18,6 +19,7 @@ export default class FabForge extends PureComponent {
     error: '',
     notice: '',
     sourceType: 'artifact',
+    candidate: '',
     artifactId: '',
     owner: '',
     repo: '',
@@ -70,7 +72,6 @@ export default class FabForge extends PureComponent {
       this.update({ detail });
     });
   selectJob = (job) => {
-    const source = job.sourceRef && typeof job.sourceRef === 'object' ? job.sourceRef : {};
     this.setState({
       job,
       review: null,
@@ -79,12 +80,23 @@ export default class FabForge extends PureComponent {
       played: false,
       notice: '',
       error: '',
+      candidate: ''
+    });
+    const direct = job.sourceRef && !Array.isArray(job.sourceRef) ? job.sourceRef : {};
+    this.applySource(direct);
+  };
+  applySource = (source = {}, candidate = '') => {
+    this.setState({
+      candidate,
+      review: null,
+      acknowledged: false,
+      played: false,
       sourceType: source.artifactId ? 'artifact' : 'repo',
-      artifactId: source.artifactId || '',
-      owner: source.owner || '',
-      repo: source.repo || '',
-      path: source.path || '',
-      ref: source.ref || ''
+      artifactId: typeof source.artifactId === 'string' ? source.artifactId : '',
+      owner: typeof source.owner === 'string' ? source.owner : '',
+      repo: typeof source.repo === 'string' ? source.repo : '',
+      path: typeof source.path === 'string' ? source.path : '',
+      ref: typeof source.ref === 'string' ? source.ref : ''
     });
   };
   importGcode = () => this.perform(async () => {
@@ -202,7 +214,12 @@ export default class FabForge extends PureComponent {
                 Workspace: {config.workspaceId}
                 {config.resourceId && ` · Resource: ${config.resourceId}`}
               </p>
-              {!visible.length && <p>No CNC or laser work orders in this view. Create a work order in FabForge and assign its job to this machine resource.</p>}
+              {!visible.length && (
+                <p>
+                  No CNC or laser work orders in this view. Create a work order in FabForge and assign its job to this
+                  machine resource.
+                </p>
+              )}
               {visible.map((order) => (
                 <button
                   type="button"
@@ -255,16 +272,7 @@ export default class FabForge extends PureComponent {
                       </button>
                     ))}
                   </div>
-                  <details>
-                    <summary>Setup sheets, checklist & previous reviews</summary>
-                    <pre>
-                      {pretty({
-                        setupSheets: detail.setupSheets,
-                        checklistItems: detail.checklistItems,
-                        validations: detail.validations
-                      })}
-                    </pre>
-                  </details>
+                  <ProductionPacket detail={detail} job={job} />
                 </section>
               )}
               {job && (
@@ -276,11 +284,45 @@ export default class FabForge extends PureComponent {
                   </details>
                   <fieldset disabled={busy}>
                     <legend>Import G-code from FabForge</legend>
+                    {(job.reviewSources || []).length > 0 && (
+                      <label>
+                        Linked files
+                        <select
+                          value={this.state.candidate}
+                          onChange={(e) => {
+                            const candidate = e.target.value;
+                            this.applySource(
+                              candidate === '' ? {} : job.reviewSources[Number(candidate)].source,
+                              candidate
+                            );
+                          }}
+                        >
+                          <option value="">Enter a reference manually</option>
+                          {job.reviewSources.map((item, index) => (
+                            <option key={JSON.stringify(item.source)} value={String(index)}>
+                              {item.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
+                    {!(job.reviewSources || []).length && (
+                      <p>
+                        No importable files are linked yet. Attach a G-code artifact or a commit-pinned repository
+                        source in FabForge, or enter its reference below.
+                      </p>
+                    )}
                     <label>
                       Source{' '}
                       <select
                         value={this.state.sourceType}
-                        onChange={(e) => this.setState({ sourceType: e.target.value, review: null, acknowledged: false })}
+                        onChange={(e) => this.setState({
+                            sourceType: e.target.value,
+                            candidate: '',
+                            review: null,
+                            acknowledged: false,
+                            played: false
+                          })}
                       >
                         <option value="artifact">Stored artifact</option>
                         <option value="repo">Repository at commit</option>
@@ -300,7 +342,13 @@ export default class FabForge extends PureComponent {
                           {label}
                           <input
                             value={this.state[key]}
-                            onChange={(e) => this.setState({ [key]: e.target.value, review: null, acknowledged: false })}
+                            onChange={(e) => this.setState({
+                                [key]: e.target.value,
+                                candidate: '',
+                                review: null,
+                                acknowledged: false,
+                                played: false
+                              })}
                           />
                         </label>
                       ))}
