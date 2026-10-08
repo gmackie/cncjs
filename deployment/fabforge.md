@@ -158,3 +158,36 @@ The helper is idempotent and checks the existing route-table marker. Stop CNCjs
 before replacing files, preserve a backup, restart and verify both authenticated
 `/api/fabforge/status` and `/api/fabforge/work-orders`, camera snapshots, and an
 offline worker simulation. Full source installations already include these routes.
+
+## Physical output reports
+
+The queue now shows FabForge production history and a **Report physical output**
+form. An authorized operator with this job released for setup can report inspected
+quantity, outcome (meets requirements, rework, scrap), and notes. The bridge always
+creates a `draft` Production Record through the existing v0 API. A draft neither
+accepts quality nor completes the job/work order; review and acceptance stay in
+FabForge. Viewer mode cannot submit. Reports do not send controller commands.
+
+The server supplies job/resource/process, released source/hash, and operator/session
+identity. `metrics.cncjs.evidenceType=operator_report` and
+`machineCompletionVerified=false` distinguish these statements from measured runs.
+This does not verify that a program ran, and does not claim cutting time. A resource
+restriction imposed after a run does not prevent reporting its output, provided
+operator authorization and the job assignment remain valid.
+
+One report is recorded per operator release. Concurrent submissions are serialized;
+retries check persisted production records for the same session/release/hash. An
+ambiguous upstream failure blocks further POST attempts for that release until
+persisted evidence appears. The current public v0 route does not expose FabForge's
+internal idempotency key, so this is not global exactly-once delivery. Check history
+before making a new release or recovering after a restart. Correct drafts in
+FabForge; separate mixed outcomes require separate records there for now.
+
+Deploy the compiled UI, `server/lib/fabforge/production.js`, and
+`server/lib/operator-access/gateway.js`. The existing operator-route installer loads
+the new route automatically; no npm app.js replacement or route-table edit is needed.
+
+Follow-ups: expose durable idempotency in FabForge's v0 production API, support mixed
+outcome batches, and reconcile actual controller runs and cutting time. Managed badge
+enrollment/qualification remains a separate FabForge feature. No production records
+were fabricated during validation; test writes use only the localhost fixture.

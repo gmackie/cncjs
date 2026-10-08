@@ -4,6 +4,7 @@ import React, { PureComponent } from 'react';
 import { Link } from 'react-router-dom';
 import Toolpath from './Toolpath';
 import ProductionPacket from './ProductionPacket';
+import ProductionReport from './ProductionReport';
 import styles from './index.styl';
 
 const pretty = (value) => JSON.stringify(value, null, 2);
@@ -161,6 +162,10 @@ export default class FabForge extends PureComponent {
       const updated = await api.fabforge(`work-orders/${encodeURIComponent(detail.workOrder.id)}`);
       this.update({ detail: updated, job: null, review: null, notice: 'Queue disposition saved in FabForge.' });
     });
+  refreshDetail = () => this.perform(async () => {
+    const detail = await api.fabforge(`work-orders/${encodeURIComponent(this.state.detail.workOrder.id)}`);
+    this.update({ detail, job: detail.jobs.find(item => item.id === this.state.job.id) || null });
+  });
   download = () => {
     const blob = new Blob([this.state.review.gcode], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -199,7 +204,7 @@ export default class FabForge extends PureComponent {
         </header>
 )}
         <p className={styles.banner}>
-          Offline simulation only. Importing and playback send no commands to the Shapeoko.
+          Toolpath previews run offline. Importing, playback and production reports send no commands to the Shapeoko.
         </p>
         {error && (
           <p role="alert" className={styles.error}>
@@ -497,6 +502,15 @@ export default class FabForge extends PureComponent {
                     </div>
                   )}
                 </section>
+              )}
+              {job && badgeAccess && (
+                <ProductionReport
+                  key={`${job.id}:${access && access.release && access.release.releasedAt}`}
+                  workOrderId={detail.workOrder.id}
+                  job={job}
+                  access={access}
+                  onSaved={this.refreshDetail}
+                />
               )}
               {job && canControl && (
                 <section className={styles.card}>

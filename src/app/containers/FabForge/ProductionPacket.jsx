@@ -17,6 +17,7 @@ const ProductionPacket = ({ detail, job }) => {
   const relevant = (item) => !job || !item.jobId || item.jobId === job.id;
   const sheets = (detail.setupSheets || []).filter(relevant);
   const checklist = (detail.checklistItems || []).filter(relevant);
+  const records = (detail.productionRecords || []).filter(relevant);
   const reviews = (detail.validations || []).filter(relevant);
   return (
     <div className={styles.packet}>
@@ -53,6 +54,24 @@ const ProductionPacket = ({ detail, job }) => {
             </li>
           ))}
         </ul>
+      </details>
+      <details open={records.length > 0}>
+        <summary>Production history ({records.length})</summary>
+        {!records.length && <p>No physical output recorded in FabForge.</p>}
+        {records.map(record => (
+          <section key={record.id}>
+            <h3>{display(record.quantity)} {record.unit || 'each'} · {label(record.outcome || 'unknown')}</h3>
+            <p>{record.status === 'draft' ? 'Draft · awaiting acceptance in FabForge' : label(record.status || 'unknown')}</p>
+            <p>{display(record.note)}</p>
+            {record.metrics && record.metrics.cncjs && (
+              <div>
+                <p>Reported by operator {display(record.metrics.cncjs.operatorId)}</p>
+                <p>G-code SHA-256: <code>{display(record.metrics.cncjs.sha256)}</code></p>
+              </div>
+            )}
+            {record.createdAt && <p>{String(record.createdAt)}</p>}
+          </section>
+        ))}
       </details>
       <details>
         <summary>Previous reviews ({reviews.length})</summary>

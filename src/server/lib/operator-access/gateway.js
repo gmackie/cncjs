@@ -3,8 +3,10 @@ import access from './service';
 import store from '../../store';
 import { createService } from '../fabforge/service';
 import { configuration } from '../fabforge/client';
+import { createProduction } from '../fabforge/production';
 
 const fabforge = createService();
+const production = createProduction({ access });
 const sha256 = (value) => crypto.createHash('sha256').update(value).digest('hex');
 export const tokenFrom = (req) => req.get('X-CNCjs-Operator') || '';
 export const checkLoadedFile = (session, gcode) => {
@@ -30,6 +32,10 @@ const respond = (action) => async (req, res) => {
   }
 };
 export const installRoutes = (app, prefix) => {
+  app.post(
+    `${prefix}/operator-access/production-records`,
+    respond((req) => production(tokenFrom(req), req.body))
+  );
   app.get(
     `${prefix}/operator-access`,
     respond(async (req) => {
