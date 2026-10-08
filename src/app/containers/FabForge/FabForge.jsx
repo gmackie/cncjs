@@ -10,7 +10,13 @@ const pretty = (value) => JSON.stringify(value, null, 2);
 const jobPath = (order, job) => `work-orders/${encodeURIComponent(order)}/jobs/${encodeURIComponent(job)}`;
 
 export default class FabForge extends PureComponent {
-  static propTypes = { canControl: PropTypes.bool, badgeAccess: PropTypes.bool, access: PropTypes.object, onAccessChange: PropTypes.func };
+  static propTypes = {
+    embedded: PropTypes.bool,
+    canControl: PropTypes.bool,
+    badgeAccess: PropTypes.bool,
+    access: PropTypes.object,
+    onAccessChange: PropTypes.func
+  };
   static defaultProps = { canControl: false };
   state = {
     config: null,
@@ -165,7 +171,7 @@ export default class FabForge extends PureComponent {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
   render() {
-    const { canControl, badgeAccess, access } = this.props;
+    const { canControl, badgeAccess, access, embedded } = this.props;
     const { config, orders, detail, job, review, busy, error, notice, filter } = this.state;
     const visible = orders.filter((order) => filter === 'all' || !['complete', 'cancelled'].includes(order.status));
     const jobs = detail
@@ -181,7 +187,8 @@ export default class FabForge extends PureComponent {
       : [];
     const analysis = review && review.analysis;
     return (
-      <div className={styles.page}>
+      <div className={`${styles.page} ${embedded ? styles.embedded : ''}`}>
+        {!embedded && (
         <header className={styles.header}>
           <div>
             <div className={styles.eyebrow}>FABFORGE / SHOP FLOOR</div>
@@ -190,6 +197,7 @@ export default class FabForge extends PureComponent {
           </div>
           <Link to="/shop">Machine dashboard</Link>
         </header>
+)}
         <p className={styles.banner}>
           Offline simulation only. Importing and playback send no commands to the Shapeoko.
         </p>
@@ -236,8 +244,8 @@ export default class FabForge extends PureComponent {
                 </select>
               </label>
               <p className={styles.muted}>
-                Workspace: {config.workspaceId}
-                {config.resourceId && ` · Resource: ${config.resourceId}`}
+                {embedded ? 'Graham Mackie’s workspace' : `Workspace: ${config.workspaceId}`}
+                {!embedded && config.resourceId && ` · Resource: ${config.resourceId}`}
               </p>
               {!visible.length && (
                 <p>
@@ -308,7 +316,7 @@ export default class FabForge extends PureComponent {
                     <pre>{pretty(job.sourceRef)}</pre>
                   </details>
                   <fieldset disabled={busy}>
-                    <legend>Import G-code from FabForge</legend>
+                    <legend>Toolpath file</legend>
                     {(job.reviewSources || []).length > 0 && (
                       <label>
                         Linked files
@@ -337,24 +345,26 @@ export default class FabForge extends PureComponent {
                         source in FabForge, or enter its reference below.
                       </p>
                     )}
-                    <label>
-                      Source{' '}
-                      <select
-                        value={this.state.sourceType}
-                        onChange={(e) => this.setState({
+                    {this.state.candidate === '' && (
+                    <div>
+                      <label>
+                        Source{' '}
+                        <select
+                          value={this.state.sourceType}
+                          onChange={(e) => this.setState({
                             sourceType: e.target.value,
                             candidate: '',
                             review: null,
                             acknowledged: false,
                             played: false
                           })}
-                      >
-                        <option value="artifact">Stored artifact</option>
-                        <option value="repo">Repository at commit</option>
-                      </select>
-                    </label>
-                    <div className={styles.fields}>
-                      {(this.state.sourceType === 'artifact'
+                        >
+                          <option value="artifact">Stored artifact</option>
+                          <option value="repo">Repository at commit</option>
+                        </select>
+                      </label>
+                      <div className={styles.fields}>
+                        {(this.state.sourceType === 'artifact'
                         ? [['artifactId', 'Artifact ID']]
                         : [
                             ['owner', 'Repository owner'],
@@ -377,9 +387,11 @@ export default class FabForge extends PureComponent {
                           />
                         </label>
                       ))}
+                      </div>
                     </div>
+)}
                     <button type="button" onClick={this.importGcode}>
-                      Import & backplot
+                      Review toolpath
                     </button>
                     <p className={styles.muted}>
                       The selected source is recorded with its SHA-256 hash. Review supports files up to 2 MiB / 20,000

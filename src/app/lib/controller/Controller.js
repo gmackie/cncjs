@@ -31,6 +31,7 @@ class Controller {
 
         // System Events
         'startup': [],
+        'operator:denied': [],
         'config:change': [],
         'task:start': [],
         'task:finish': [],
