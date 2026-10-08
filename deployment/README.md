@@ -208,3 +208,14 @@ The Pi again reports active undervoltage/throttling (`0x50005`). Check its power
 supply/cable and USB power budget before machine commissioning. Manual control
 is reported working by the owner; homing, travel calibration, BitSetter and laser
 commissioning remain unverified.
+
+## FabForge integration
+
+The shop queue and offline G-code review page is `/#/fabforge`, connected to
+`https://fab.forgegraf.com` and Graham Mackie's workspace. See [fabforge.md](fabforge.md)
+for the API contract, scoped resource, simulation limits and operator workflow.
+The Shapeoko resource is marked restricted pending physical commissioning.
+Credentials live in a private environment file loaded by a systemd drop-in.
+Rollback archive: `/home/pi/cncjs-upgrade/pre-fabforge.tgz`. Restore it into the
+application's `dist/cncjs` directory with CNCjs stopped and remove the FabForge
+systemd drop-in, then reload systemd/start CNCjs. Do this only with an idle machine.

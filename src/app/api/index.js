@@ -724,7 +724,19 @@ machines.run = (id) => new Promise((resolve, reject) => {
     });
 });
 
+const fabforge = (path, body) => new Promise((resolve, reject) => {
+  const request = body ? authrequest.post('/api/fabforge/' + path).send(body) : authrequest.get('/api/fabforge/' + path);
+  request.end((err, res) => {
+    if (err) {
+ reject(new Error((res && res.body && res.body.msg) || 'FabForge request failed.'));
+} else {
+ resolve(res.body);
+}
+  });
+});
+
 export default {
+  fabforge,
   getLatestVersion,
 
   // State

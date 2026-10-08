@@ -1,0 +1,37 @@
+// Local FabForge contract fixture. No machine connection and no production writes.
+// FABFORGE_URL=http://127.0.0.1:8010 FABFORGE_WORKSPACE_ID=fixture FABFORGE_TOKEN=fixture-only
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const workOrder = { id: 'fixture-order', title: 'Fixture · rounded pocket review', status: 'ready', processTypes: ['cnc'], description: 'Local API fixture — no production work order.' };
+const job = { id: 'fixture-job', title: 'DWP611 pocket toolpath', processType: 'cnc', status: 'queued', queuePosition: 1, sourceRef: { artifactId: 'fixture-code' } };
+const validations = [];
+http.createServer((req, res) => {
+  if (req.headers.authorization !== 'Bearer fixture-only') { res.writeHead(401); res.end(); return; }
+  const url = new URL(req.url, 'http://localhost');
+  const route = url.pathname.replace('/api/fabrication/v0/', '');
+  const chunks = [];
+  req.on('data', c => chunks.push(c));
+  req.on('end', () => {
+    res.setHeader('Content-Type', 'application/json');
+    if (route === 'work-orders' && req.method === 'GET') { res.end(JSON.stringify({ data: { workOrders: [workOrder] } })); return; }
+    if (route === 'work-orders/fixture-order' && req.method === 'GET') {
+      res.end(JSON.stringify({ data: { workOrder, jobs: [job], setupSheets: [{ title: 'Fixture setup', stock: 'Review only', tool: '1/8 inch end mill', origin: 'Stock top, front-left' }], checklistItems: [{ label: 'Physical setup not commissioned', status: 'open' }], validations } })); return;
+    }
+    if (route === 'artifacts/fixture-code' && req.method === 'GET') {
+      res.setHeader('Content-Type', 'text/plain'); res.end(fs.readFileSync(path.join(__dirname, 'fixture.nc'))); return;
+    }
+    if (route === 'work-orders/fixture-order/validations' && req.method === 'POST') {
+      const validation = { id: `v${validations.length + 1}`, ...JSON.parse(Buffer.concat(chunks).toString()) };
+      validations.push(validation);
+      if (validation.status === 'failed') { workOrder.status = 'blocked'; }
+      res.end(JSON.stringify({ data: { validation } })); return;
+    }
+    if (route.endsWith('/disposition') && req.method === 'POST') {
+      const body = JSON.parse(Buffer.concat(chunks).toString());
+      job.status = body.disposition === 'approved_cancellation' ? 'cancelled' : 'queued';
+      res.end(JSON.stringify({ data: { job } })); return;
+    }
+    res.writeHead(404); res.end(JSON.stringify({ error: 'Fixture route not found' }));
+  });
+}).listen(8010, '127.0.0.1', () => console.log('FabForge local contract fixture listening on 127.0.0.1:8010'));

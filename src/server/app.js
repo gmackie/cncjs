@@ -264,6 +264,14 @@ const appMain = () => {
     app.get(urljoin(settings.route, 'api/tool'), api.tool.get);
     app.post(urljoin(settings.route, 'api/tool'), api.tool.set);
 
+    // FabForge queue and offline review. These handlers never access controllers.
+    app.get(urljoin(settings.route, 'api/fabforge/status'), api.fabforge.status);
+    app.get(urljoin(settings.route, 'api/fabforge/work-orders'), api.fabforge.queue);
+    app.get(urljoin(settings.route, 'api/fabforge/work-orders/:id'), api.fabforge.detail);
+    app.post(urljoin(settings.route, 'api/fabforge/work-orders/:id/jobs/:jobId/review'), api.fabforge.review);
+    app.post(urljoin(settings.route, 'api/fabforge/work-orders/:id/jobs/:jobId/validations'), api.fabforge.record);
+    app.post(urljoin(settings.route, 'api/fabforge/work-orders/:id/jobs/:jobId/disposition'), api.fabforge.disposition);
+
     // G-code
     app.get(urljoin(settings.route, 'api/gcode'), api.gcode.fetch);
     app.post(urljoin(settings.route, 'api/gcode'), api.gcode.upload);

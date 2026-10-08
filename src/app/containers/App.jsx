@@ -5,6 +5,7 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import Workspace from './Workspace';
 import Settings from './Settings';
+import FabForge from './FabForge/FabForge';
 import Shop from './Shop/Shop';
 import styles from './App.styl';
 
@@ -17,6 +18,7 @@ class App extends PureComponent {
       const { location } = this.props;
       const accepted = ([
         '/shop',
+        '/fabforge',
         '/workspace',
         '/settings',
         '/settings/general',
@@ -50,7 +52,7 @@ class App extends PureComponent {
           <aside className={styles.sidebar} id="sidebar">
             <Sidebar {...this.props} />
           </aside>
-          <div role="main" className={styles.main} style={location.pathname === '/shop' ? { minWidth: 0 } : undefined}>
+          <div role="main" className={styles.main} style={['/shop', '/fabforge'].includes(location.pathname) ? { minWidth: 0 } : undefined}>
             <div className={styles.content}>
               <Workspace
                 {...this.props}
@@ -59,6 +61,7 @@ class App extends PureComponent {
                 }}
               />
               {location.pathname === '/shop' && <Shop />}
+              {location.pathname === '/fabforge' && <FabForge />}
               {location.pathname.indexOf('/settings') === 0 &&
                 <Settings {...this.props} />}
             </div>
