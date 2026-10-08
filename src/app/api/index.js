@@ -1,9 +1,13 @@
 import { ensureArray } from 'ensure-type';
 import superagent from 'superagent';
 import superagentUse from 'superagent-use';
+import { operatorToken } from '../lib/operator-access';
 import store from '../store';
 
 const bearer = (request) => {
+  if (operatorToken()) {
+ request.set('X-CNCjs-Operator', operatorToken());
+}
   const token = store.get('session.token');
   if (token) {
     request.set('Authorization', 'Bearer ' + token);
@@ -26,6 +30,16 @@ const noCache = (request) => {
 const authrequest = superagentUse(superagent);
 authrequest.use(bearer);
 authrequest.use(noCache);
+
+export const operatorAccess = (method = 'GET', suffix = '', body) => new Promise((resolve, reject) => {
+  authrequest[method.toLowerCase()]('/api/operator-access' + suffix).send(body).end((err, res) => {
+    if (err) {
+ reject(new Error((res && res.body && res.body.msg) || 'Machine access unavailable.'));
+} else {
+ resolve(res.body);
+}
+  });
+});
 
 //
 // Authentication

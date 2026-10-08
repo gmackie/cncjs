@@ -1,4 +1,5 @@
 import classNames from 'classnames';
+import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import { Link, withRouter } from 'react-router-dom';
 import i18n from 'app/lib/i18n';
@@ -6,7 +7,9 @@ import styles from './index.styl';
 
 class Sidebar extends PureComponent {
     static propTypes = {
-      ...withRouter.propTypes
+      ...withRouter.propTypes,
+      canControl: PropTypes.bool,
+      canAdmin: PropTypes.bool
     };
 
     render() {
@@ -25,6 +28,7 @@ class Sidebar extends PureComponent {
                 <i aria-hidden="true" className="fa fa-th-large" style={{ fontSize: 22, padding: '16px 0', color: '#fff' }} />
               </Link>
             </li>
+            {this.props.canControl && (
             <li
               className={classNames(
                 'text-center',
@@ -42,6 +46,8 @@ class Sidebar extends PureComponent {
                 />
               </Link>
             </li>
+)}
+            {this.props.canAdmin && (
             <li
               className={classNames(
                 'text-center',
@@ -59,6 +65,7 @@ class Sidebar extends PureComponent {
                 />
               </Link>
             </li>
+)}
           </ul>
         </nav>
       );

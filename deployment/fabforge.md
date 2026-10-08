@@ -5,6 +5,9 @@ truth for Work Orders, Jobs, queue positions, setup sheets and validation record
 The integration targets the existing `/api/fabrication/v0` API at
 `https://fab.forgegraf.com`; it requires no FabForge schema or source changes.
 
+See [operator-access.md](operator-access.md) for viewer mode, RFID enrollment,
+machine authorization, operator sessions and setup release.
+
 ## Operator workflow
 
 1. Choose an active CNC/laser Work Order, then a Job. Jobs sort by FabForge queue

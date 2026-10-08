@@ -31,6 +31,7 @@ import urljoin from './lib/urljoin';
 import logger from './lib/logger';
 import settings from './config/settings';
 import * as api from './api';
+import { installRoutes as installOperatorRoutes, httpGate } from './lib/operator-access/gateway';
 import errclient from './lib/middleware/errclient';
 import errlog from './lib/middleware/errlog';
 import errnotfound from './lib/middleware/errnotfound';
@@ -250,6 +251,9 @@ const appMain = () => {
     // Also see "src/app/app.js"
     app.post(urljoin(settings.route, 'api/signin'), api.users.signin);
   }
+
+  installOperatorRoutes(app, urljoin(settings.route, 'api'));
+  app.use(urljoin(settings.route, 'api'), httpGate());
 
   { // Register API routes with authorized access
     // Version

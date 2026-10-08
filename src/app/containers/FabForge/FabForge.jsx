@@ -1,6 +1,7 @@
+import PropTypes from 'prop-types';
+import api, { operatorAccess } from 'app/api';
 import React, { PureComponent } from 'react';
 import { Link } from 'react-router-dom';
-import api from 'app/api';
 import Toolpath from './Toolpath';
 import ProductionPacket from './ProductionPacket';
 import styles from './index.styl';
@@ -9,6 +10,8 @@ const pretty = (value) => JSON.stringify(value, null, 2);
 const jobPath = (order, job) => `work-orders/${encodeURIComponent(order)}/jobs/${encodeURIComponent(job)}`;
 
 export default class FabForge extends PureComponent {
+  static propTypes = { canControl: PropTypes.bool, badgeAccess: PropTypes.bool, access: PropTypes.object, onAccessChange: PropTypes.func };
+  static defaultProps = { canControl: false };
   state = {
     config: null,
     orders: [],
@@ -35,10 +38,31 @@ export default class FabForge extends PureComponent {
 
   componentDidMount() {
     this.refresh();
+    this.queueTimer = setInterval(this.pollQueue, 15000);
   }
   componentWillUnmount() {
     this.unmounted = true;
+    clearInterval(this.queueTimer);
   }
+  pollQueue = async () => {
+    if (this.state.busy || !this.state.config || !this.state.config.configured) {
+ return;
+}
+    try {
+      const result = await api.fabforge('work-orders');
+      this.update({ orders: result.workOrders });
+    } catch (err) {
+ this.update({ error: 'Queue refresh failed. Displayed work may be out of date.' });
+}
+  };
+  release = () => this.perform(async () => {
+    const { detail, job, review } = this.state;
+    const access = await operatorAccess('POST', '/release', {
+      workOrderId: detail.workOrder.id, jobId: job.id, source: review.source, hash: review.hash
+    });
+    this.props.onAccessChange(access);
+    this.update({ notice: 'Released for setup. Load the reviewed file and start separately after physical checks.' });
+  });
   perform = async (action) => {
     this.setState({ busy: true, error: '', notice: '' });
     try {
@@ -141,6 +165,7 @@ export default class FabForge extends PureComponent {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
   render() {
+    const { canControl, badgeAccess, access } = this.props;
     const { config, orders, detail, job, review, busy, error, notice, filter } = this.state;
     const visible = orders.filter((order) => filter === 'all' || !['complete', 'cancelled'].includes(order.status));
     const jobs = detail
@@ -160,8 +185,8 @@ export default class FabForge extends PureComponent {
         <header className={styles.header}>
           <div>
             <div className={styles.eyebrow}>FABFORGE / SHOP FLOOR</div>
-            <h1>Queue & toolpath review</h1>
-            <p>Review the production packet, play the toolpath, and return evidence to FabForge.</p>
+            <h1>{canControl ? 'Queue & toolpath review' : 'Machine queue'}</h1>
+            <p>{canControl ? 'Review the production packet, play the toolpath, and return evidence to FabForge.' : 'Live queue viewer · refreshes every 15 seconds. Select a job to inspect its setup and toolpath.'}</p>
           </div>
           <Link to="/shop">Machine dashboard</Link>
         </header>
@@ -407,7 +432,7 @@ export default class FabForge extends PureComponent {
                       <li key={item}>{item}</li>
                     ))}
                   </ul>
-                  <fieldset disabled={busy}>
+                  <fieldset disabled={busy || !canControl}>
                     <legend>Record review in FabForge</legend>
                     <label>
                       Decision{' '}
@@ -451,9 +476,17 @@ export default class FabForge extends PureComponent {
                       <p>Play the simulation to the end before saving a completed review.</p>
                     )}
                   </fieldset>
+                  {badgeAccess && canControl && (
+                    <div>
+                      <button type="button" onClick={this.release} disabled={busy || !access.machineAvailable || !analysis.complete || !this.state.played || !this.state.acknowledged}>
+                        Release for setup
+                      </button>
+                      <p>Release records your identity and this exact file. It does not start the machine.</p>
+                    </div>
+                  )}
                 </section>
               )}
-              {job && (
+              {job && canControl && (
                 <section className={styles.card}>
                   <h2>Queue management</h2>
                   <p>
