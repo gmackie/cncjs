@@ -167,3 +167,18 @@ and the CNC server stays responsive. A labeled **NOT A LIVE CAMERA** JPEG verifi
 both the snapshot and multipart stream paths; this does not validate real capture.
 The fixture streamer is stopped after testing. Roll back camera support by removing
 the `/camera` mount and stopping/disabling `cncjs-camera`.
+
+## Reviewed dashboard macros
+
+Dashboard submissions use `macro:run-reviewed`. Before enqueueing, the Grbl server
+checks that the saved macro still exactly matches the reviewed text, the serial
+connection is open, the reported machine and workflow are idle, `$32=0`, and the
+feeder has no queued, pending, or held commands. Rejections return an explanation
+and require another review. The legacy workspace macro command is unchanged for
+existing paused tool-change workflows. These checks use reported controller state;
+they do not establish homing, validate probe coordinates, or replace supervision.
+
+Regression coverage verifies rejected submissions produce no serial writes and a
+matching reviewed macro can run against a simulated idle milling controller.
+Physical homing, BitSetter calibration, measured XL travel, laser wiring and output
+testing, and real USB camera capture remain the commissioning follow-ups.

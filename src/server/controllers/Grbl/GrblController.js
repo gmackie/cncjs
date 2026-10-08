@@ -1615,6 +1615,31 @@ class GrblController {
             this.feeder.next();
           }
         },
+        // Dashboard submissions must still match the content the operator reviewed.
+        // Validate and enqueue synchronously so another request cannot interleave.
+        'macro:run-reviewed': () => {
+          const [id, reviewedContent, context = {}, callback = noop] = args;
+          const macro = _.find(config.get('macros'), { id });
+          const reject = (code, message) => callback({ code, message });
+          if (!macro || typeof reviewedContent !== 'string' || !reviewedContent.trim() || macro.content !== reviewedContent) {
+            reject('MACRO_CHANGED', 'The saved macro changed or is unavailable. Review it again.');
+            return;
+          }
+          if (!this.isOpen() || _.get(this.state, 'status.activeState') !== 'Idle' ||
+              this.workflow.state !== WORKFLOW_STATE_IDLE || !this.runner.isIdle() ||
+              ![0, '0'].includes(_.get(this.settings, 'settings.$32'))) {
+            reject('MACHINE_NOT_READY', 'The controller must be connected and idle in milling mode.');
+            return;
+          }
+          const feeder = this.feeder.toJSON();
+          if (feeder.queue || feeder.pending || feeder.hold) {
+            reject('COMMANDS_PENDING', 'Other commands are pending. Wait for them to finish before reviewing again.');
+            return;
+          }
+          this.event.trigger('macro:run');
+          this.command('gcode', reviewedContent, context);
+          callback(null);
+        },
         'macro:run': () => {
           let [id, context = {}, callback = noop] = args;
           if (typeof context === 'function') {

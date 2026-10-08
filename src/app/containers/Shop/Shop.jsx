@@ -63,7 +63,7 @@ class Shop extends PureComponent {
         machine: controller.state,
         settings: controller.settings,
         workflow: controller.workflow.state,
-        acknowledged: controller.connected && controller.port ? this.state.acknowledged : false
+        acknowledged: this.canRun() ? this.state.acknowledged : false
       });
     };
 
@@ -101,14 +101,14 @@ class Shop extends PureComponent {
       if (!this.canRun() || !this.state.acknowledged || this.state.pending || !this.state.selected) {
         return;
       }
-      const { id } = this.state.selected;
+      const { id, content } = this.state.selected;
       this.setState({ pending: true, error: '' });
       this.submitTimeout = setTimeout(() => {
         if (!this.unmounted) {
           this.setState({ selected: null, pending: false, acknowledged: false, error: i18n._('No acknowledgement received. Check the machine and workspace console before retrying.') });
         }
       }, 10000);
-      controller.command('macro:run', id, controller.context, (err) => {
+      controller.command('macro:run-reviewed', id, content, controller.context, (err) => {
         if (this.unmounted) {
           return;
         }
@@ -117,7 +117,7 @@ class Shop extends PureComponent {
           pending: false,
           selected: null,
           acknowledged: false,
-          error: err ? i18n._('The controller could not start the macro. Check the workspace console.') : '',
+          error: err ? (err.message || i18n._('The controller could not start the macro. Check the workspace console.')) : '',
           notice: err ? '' : i18n._('Macro submitted. Watch the machine and follow progress in the workspace. Submission does not confirm probing completed.')
         });
       });
