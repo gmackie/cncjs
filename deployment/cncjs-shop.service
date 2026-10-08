@@ -1,0 +1,16 @@
+[Unit]
+Description=CNCjs Shapeoko workshop
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi
+Environment=PATH=/home/pi/cncjs-upgrade/bin:/usr/local/bin:/usr/bin:/bin
+Environment=NODE_ENV=production
+ExecStart=/home/pi/cncjs-upgrade/bin/node /home/pi/cncjs-upgrade/app/node_modules/cncjs/bin/cncjs --port 8000 --config /home/pi/.cncrc
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

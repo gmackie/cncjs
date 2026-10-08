@@ -5,6 +5,7 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import Workspace from './Workspace';
 import Settings from './Settings';
+import Shop from './Shop/Shop';
 import styles from './App.styl';
 
 class App extends PureComponent {
@@ -15,6 +16,7 @@ class App extends PureComponent {
     render() {
       const { location } = this.props;
       const accepted = ([
+        '/shop',
         '/workspace',
         '/settings',
         '/settings/general',
@@ -31,7 +33,7 @@ class App extends PureComponent {
         return (
           <Redirect
             to={{
-              pathname: '/workspace',
+              pathname: '/shop',
               state: {
                 from: location
               }
@@ -48,7 +50,7 @@ class App extends PureComponent {
           <aside className={styles.sidebar} id="sidebar">
             <Sidebar {...this.props} />
           </aside>
-          <div role="main" className={styles.main}>
+          <div role="main" className={styles.main} style={location.pathname === '/shop' ? { minWidth: 0 } : undefined}>
             <div className={styles.content}>
               <Workspace
                 {...this.props}
@@ -56,6 +58,7 @@ class App extends PureComponent {
                   display: (location.pathname !== '/workspace') ? 'none' : 'block'
                 }}
               />
+              {location.pathname === '/shop' && <Shop />}
               {location.pathname.indexOf('/settings') === 0 &&
                 <Settings {...this.props} />}
             </div>

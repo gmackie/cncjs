@@ -15,6 +15,11 @@ class Sidebar extends PureComponent {
       return (
         <nav aria-label="Main navigation" className={styles.navbar}>
           <ul className={styles.nav}>
+            <li className={classNames('text-center', { [styles.active]: pathname === '/shop' })}>
+              <Link aria-label={i18n._('Shop dashboard')} to="/shop" title={i18n._('Shop dashboard')}>
+                <i aria-hidden="true" className="fa fa-th-large" style={{ fontSize: 22, padding: '16px 0', color: '#fff' }} />
+              </Link>
+            </li>
             <li
               className={classNames(
                 'text-center',
