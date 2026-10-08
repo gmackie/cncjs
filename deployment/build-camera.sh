@@ -10,7 +10,8 @@ tar -xzf source.tar.gz
 curl -fLsS 'https://archive.debian.org/debian/pool/main/libj/libjpeg-turbo/libjpeg62-turbo-dev_1.5.2-2+deb10u1_armhf.deb' -o jpeg-dev.deb
 dpkg-deb -x jpeg-dev.deb headers
 cd "mjpg-streamer-$revision/mjpg-streamer-experimental"
-gcc -O2 -o "$camera_root/mjpg_streamer" mjpg_streamer.c utils.c -lpthread -ldl
+# USB plugins resolve shared helpers from the executable at dlopen time.
+gcc -O2 -Wl,--export-dynamic -o "$camera_root/mjpg_streamer" mjpg_streamer.c utils.c -lpthread -ldl
 gcc -O2 -shared -fPIC -DLINUX -D_GNU_SOURCE \
     -I"$camera_root/headers/usr/include" -I"$camera_root/headers/usr/include/arm-linux-gnueabihf" \
     -o "$camera_root/input_uvc.so" plugins/input_uvc/input_uvc.c plugins/input_uvc/v4l2uvc.c \
@@ -19,3 +20,8 @@ gcc -O2 -shared -fPIC -D_GNU_SOURCE -o "$camera_root/output_http.so" \
     plugins/output_http/httpd.c plugins/output_http/output_http.c -lpthread
 # File input is only for explicitly labeled installation tests, never live viewing.
 gcc -O2 -shared -fPIC -D_GNU_SOURCE -o "$camera_root/input_file.so" plugins/input_file/input_file.c -lpthread
+
+# Resolve every USB-plugin symbol without opening a camera. A file-input fixture
+# does not cover these dependencies. Missing exports must fail the build.
+cd "$camera_root"
+LD_BIND_NOW=1 ./mjpg_streamer -i './input_uvc.so --help' -o './output_http.so --help'

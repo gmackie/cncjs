@@ -182,3 +182,29 @@ Regression coverage verifies rejected submissions produce no serial writes and a
 matching reviewed macro can run against a simulated idle milling controller.
 Physical homing, BitSetter calibration, measured XL travel, laser wiring and output
 testing, and real USB camera capture remain the commissioning follow-ups.
+
+## USB camera commissioned 2026-10-08
+
+Connected camera: Xiongmai UVC, stable ID
+`usb-Xiongmai_web_camera_12345678-video-index0`. Real snapshots and multipart video
+were verified through the CNCjs proxy: HTTP 200, 37 JPEG frames in four seconds.
+The view shows the Shapeoko; mounting/focus still need operator adjustment.
+
+The first real USB capture exposed a build defect: the streamer executable did
+not export helpers used by `input_uvc.so` (`parse_resolution_opt` and
+`resolutions_help`). The labeled file-input fixture could not detect this.
+`build-camera.sh` now links with `--export-dynamic` and runs the real UVC plugin
+with `LD_BIND_NOW=1` and `--help`, resolving dependencies without opening hardware.
+This check failed with the old executable and passes with the rebuilt executable.
+
+The Pi profile now uses supported MJPEG 640×360 at 30 camera fps with
+`CAMERA_INPUT_OPTIONS=-softfps 10` to publish about 10 fps. The generic example
+profile remains unchanged for other cameras. Only the camera service was restarted;
+CNCjs and the motion controller were left running. Backups are
+`/home/pi/cncjs-camera/mjpg_streamer.pre-export-fix` and
+`/home/pi/cncjs-camera/camera.env.pre-format-fix`.
+
+The Pi again reports active undervoltage/throttling (`0x50005`). Check its power
+supply/cable and USB power budget before machine commissioning. Manual control
+is reported working by the owner; homing, travel calibration, BitSetter and laser
+commissioning remain unverified.
