@@ -698,3 +698,62 @@
   border-radius 7px
   background #edf2e8
   font-weight 600
+
+.setupGrid
+  display grid
+  grid-template-columns minmax(0, 1.2fr) minmax(0, 1fr)
+  align-items start
+  gap 24px
+  margin 24px 0
+.setupMonitor
+  display grid
+  gap 20px
+.setupSteps
+  display grid
+  gap 8px
+  margin 20px 0
+  button
+    display flex
+    gap 12px
+    align-items center
+    text-align left
+    min-height 44px
+    &[aria-current="step"]
+      background #e4eddc
+      border-color #45663f
+      font-weight 600
+    span
+      color #566c4d
+.setupInstruction
+  border-top 1px solid #d8dfd1
+  padding-top 22px
+  min-height 190px
+  p
+    line-height 1.8
+.setupCoordinates
+  width 100%
+  margin 18px 0
+  font-variant-numeric tabular-nums
+  caption
+    text-align left
+    color #56634f
+    margin-bottom 10px
+  th,td
+    padding 8px
+    border-bottom 1px solid #d8dfd1
+    text-align right
+  th:first-child
+    text-align left
+.setupControls
+  margin 28px 0
+.setupHandbook
+  width 100%
+  height 700px
+  border 1px solid #d8dfd1
+  border-radius 8px
+  background white
+@media (max-width: 1100px)
+  .setupGrid
+    grid-template-columns minmax(0, 1fr)
+  .setupInstruction
+    min-height 0

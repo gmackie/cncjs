@@ -540,6 +540,7 @@ class GrblController {
       this.runner.on('raw', noop);
 
       this.runner.on('status', (res) => {
+        this.statusReceivedAt = Date.now();
         /**
          * Handle the scenario where a startup message is not received during UART communication.
          * A status query (?) will be issued in the `queryActivity` function.
@@ -1159,6 +1160,7 @@ class GrblController {
         rtscts: this.options.rtscts,
         sockets: Object.keys(this.sockets),
         ready: this.ready,
+        statusAgeMs: this.statusReceivedAt ? Math.max(0, Date.now() - this.statusReceivedAt) : null,
         controller: {
           type: this.type,
           settings: this.settings,

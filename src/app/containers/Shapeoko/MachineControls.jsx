@@ -13,6 +13,7 @@ export default class MachineControls extends PureComponent {
     fresh: PropTypes.bool,
     canOperate: PropTypes.bool,
     access: PropTypes.object,
+    setupOnly: PropTypes.bool,
   };
   state = {
     ports: [],
@@ -205,6 +206,8 @@ export default class MachineControls extends PureComponent {
     if (
       !controlState(this.props.machine, this.props.fresh, this.props.canOperate)
         .mill ||
+      this.props.setupOnly ||
+      /^(Initial|New) Tool Set$/i.test(get(this.state.selected, 'name', '')) ||
       !this.state.acknowledged ||
       this.state.busy
     ) {
@@ -243,7 +246,7 @@ export default class MachineControls extends PureComponent {
     );
   };
   render() {
-    const { machine, fresh, canOperate, access } = this.props;
+    const { machine, fresh, canOperate, access, setupOnly } = this.props;
     const { busy, confirm, selected } = this.state;
     const state = controlState(machine, fresh, canOperate);
     const release = access && access.release;
@@ -381,6 +384,7 @@ export default class MachineControls extends PureComponent {
               </button>
             </div>
           </section>
+          {!setupOnly && (
           <section className={styles.panel}>
             <span className={styles.eyebrow}>RELEASED WORK</span>
             <h2>Load. Verify. Start.</h2>
@@ -430,12 +434,13 @@ export default class MachineControls extends PureComponent {
               verified.
             </p>
           </section>
+)}
           <section className={styles.panel}>
             <span className={styles.eyebrow}>CARBIDE BITSETTER</span>
             <h2>Keep the tool reference</h2>
             <p>
-              Initial tool set establishes the reference. New tool set uses it
-              for a subsequent cutter.
+              The 2020 Initial Tool Set and New Tool Set macros need replacement.
+              Their work-coordinate reference can become incorrect after stock zero changes.
             </p>
             <button
               type="button"
@@ -539,10 +544,10 @@ export default class MachineControls extends PureComponent {
               </button>
               <button
                 type="button"
-                disabled={!state.mill || !this.state.acknowledged || busy}
+                disabled={setupOnly || /^(Initial|New) Tool Set$/i.test(selected.name) || !state.mill || !this.state.acknowledged || busy}
                 onClick={this.runMacro}
               >
-                Run reviewed macro
+                {setupOnly || /^(Initial|New) Tool Set$/i.test(selected.name) ? 'Probing unavailable · commissioning pending' : 'Run reviewed macro'}
               </button>
             </div>
           </Dialog>

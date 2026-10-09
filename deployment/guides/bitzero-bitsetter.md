@@ -28,7 +28,7 @@ With the router unplugged and laser power off, an operator at the machine must f
 
 With both probes untouched, inspect the controller's probe input. For Grbl 1.1 status reports, an active probe is indicated by **P** in the **Pn** field; no P means inactive. A recent status report is required. An accessory LED alone does not prove that the controller sees the input.
 
-1. Attach BitZero's magnetic grounding lead to the collet nut or conductive probing pin, as described by Carbide. With no axes moving, touch the probe body to the pin: its LED should turn red, and the controller probe input should become active.
+1. Attach BitZero's magnetic grounding lead to the collet nut or conductive probing pin, as described by Carbide. With no axes moving, carefully bring the probe body into contact with the stationary conductive pin/cutter, keeping fingers clear of its edges: its LED should turn red, and the controller probe input should become active.
 2. Separate them: verify the input returns inactive. Repeat several times.
 3. Place BitZero where it cannot contact the grounded tool or create an unintended contact. Manually depress BitSetter's button: verify the controller input becomes active; release it and verify it clears.
 4. Test the two accessories independently. With a shared input, the controller cannot tell which accessory caused contact. Neither may already be triggered when a cycle starts.
@@ -53,7 +53,9 @@ Record actual machine coordinates over the button, a validated route/clearance h
 
 ## 5. BitZero V2 corner setup
 
-Use the supplied **⅛-inch probing pin** with a correctly fitted DWP611-compatible ⅛-inch precision collet. Verify you actually have the pin and correct collet. Do not clamp a ⅛-inch pin in the stock ¼-inch collet. Carbide recommends its smooth probing pins because cutter flutes can produce inconsistent contact.
+You currently have **no probing pin**. A clean, conductive, intact flat-end cutter can be used after verifying electrical contact; BitSetter normally measures the installed cutter. For BitZero V2, flutes and cutter orientation can affect contact and repeatability. A smooth probing pin is preferred for accurate X/Y work. Avoid pointed/V-bits, damaged tools and coatings that prevent electrical contact. Do not assume every bit is suitable.
+
+Use a correctly fitted **DWP611-compatible ⅛-inch precision collet** for a ⅛-inch shank; never clamp it in the stock ¼-inch collet. Keep the router unplugged. Attach the magnetic lead to the collet nut and check contact/release with the actual cutter without moving the axes. Keep fingers clear of sharp edges; do not push on a cutting edge. The pin placement instructions below also describe the cutter starting position, but do not eliminate the need to validate the V2 routine and repeatability.
 
 For Carbide's lower-left XYZ corner operation (manual pages 10–12):
 
@@ -98,6 +100,6 @@ Do not run these macros merely because they appear in the UI. They were preserve
 
 Track this work as **GMA-728**. Keep it open until both input tests, homing/route checks, the V2 routine, BitSetter reference compensation and the pin–cutter–pin repeatability test are recorded. Guide installation is preparation, not completed physical setup.
 
-For the next supervised session, have the machine accessible, stock/fixtures clear for initial checks, DWP611 unplugged, laser power off, the ⅛-inch probing pin and correct collet available, and a way to stop the machine immediately. We begin with connection and stationary input checks; homing and each first probing move are separate steps.
+For the next supervised session, have the machine accessible, stock/fixtures clear for initial checks, DWP611 unplugged, laser power off, a suitable conductive flat-end cutter (or smooth probing pin) and correct ⅛-inch collet available, and a way to stop the machine immediately. We begin with connection and stationary input checks; homing and each first probing move are separate steps.
 
 Related: [DWP611 installation and milling](dwp611.md) · [J Tech 7 W laser](jtech-7w.md). Do not run router probing routines with the laser head as the tool.
