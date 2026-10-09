@@ -38,7 +38,7 @@ export const recentUsage = (file = usageFile()) => {
 };
 export const createUsageSync = ({ file = usageFile, remote = request, config = configuration, enabled = () => process.env.CNCJS_USAGE_SYNC === '1' } = {}) => {
   let running = false;
-  let state = { lastSuccess: null, error: '', enabled: false };
+  let state = { lastSuccess: null, lastChecked: null, lastUpload: null, uploadedEvents: 0, pendingBytes: 0, journalPresent: false, error: '', enabled: false };
   return {
     status: () => ({ ...state, enabled: enabled() }),
     async sync() {
@@ -48,9 +48,14 @@ export const createUsageSync = ({ file = usageFile, remote = request, config = c
       running = true;
       try {
         const filename = file();
-        if (!fs.existsSync(filename)) {
- return;
-}
+        state = { ...state, lastChecked: new Date().toISOString(), journalPresent: fs.existsSync(filename) };
+        if (!state.journalPresent) {
+          if (fs.existsSync(filename + '.fabforge-cursor.json')) {
+            throw new Error('Usage journal is missing. Restore it with its cursor before synchronizing.');
+          }
+          state = { ...state, error: '', pendingBytes: 0 };
+          return;
+        }
         const { url, workspaceId, resourceId } = config();
         if (!url || !workspaceId || !resourceId) {
  throw new Error('Configure FabForge machine binding before synchronizing usage.');
@@ -73,6 +78,7 @@ export const createUsageSync = ({ file = usageFile, remote = request, config = c
           if ((cursor.ino && cursor.ino !== stat.ino) || stat.size < position) {
  throw new Error('Usage journal rotated. Retain the old file and reconcile its cursor before continuing.');
 }
+          state = { ...state, pendingBytes: stat.size - position };
           const bytes = Buffer.alloc(Math.min(256 * 1024, stat.size - position));
           fs.readSync(fd, bytes, 0, bytes.length, position);
           let start = 0;
@@ -98,7 +104,16 @@ export const createUsageSync = ({ file = usageFile, remote = request, config = c
         }
         fs.writeFileSync(cursorFile + '.tmp', JSON.stringify({ binding, offset: position, ino: stat.ino }), { mode: 0o600 });
         fs.renameSync(cursorFile + '.tmp', cursorFile);
-        state = { enabled: true, lastSuccess: new Date().toISOString(), error: '' };
+        const checkedAt = new Date().toISOString();
+        state = {
+          ...state,
+          enabled: true,
+          lastSuccess: checkedAt,
+          lastUpload: events.length ? checkedAt : state.lastUpload,
+          uploadedEvents: state.uploadedEvents + events.length,
+          pendingBytes: stat.size - position,
+          error: ''
+        };
       } catch (err) {
         state = { ...state, error: err.message };
       } finally {

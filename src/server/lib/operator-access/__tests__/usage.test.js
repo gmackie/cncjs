@@ -60,3 +60,39 @@ test('bounds recent history and strips incomplete final records', () => {
   expect(recentUsage(file).events).toHaveLength(200);
   expect(recentUsage(file).truncated).toBe(true);
 });
+
+test('empty machines report a local check without claiming a remote upload', async () => {
+  const { sync, remote } = setup();
+  await sync.sync();
+  expect(sync.status()).toMatchObject({ journalPresent: false, lastUpload: null, uploadedEvents: 0, pendingBytes: 0, error: '' });
+  expect(sync.status().lastChecked).toBeTruthy();
+  expect(remote).not.toHaveBeenCalled();
+});
+test('a missing journal with an existing cursor cannot appear healthy', async () => {
+  const { file, sync } = setup();
+  fs.writeFileSync(file, JSON.stringify(event) + '\n');
+  await sync.sync();
+  fs.unlinkSync(file);
+  await sync.sync();
+  expect(sync.status().error).toMatch(/journal is missing/);
+  expect(sync.status().journalPresent).toBe(false);
+  expect(fs.existsSync(file + '.fabforge-cursor.json')).toBe(true);
+});
+test('reports remaining bytes across batches and does not count failed uploads', async () => {
+  const { file, sync, remote } = setup();
+  fs.writeFileSync(file, (JSON.stringify(event) + '\n').repeat(101));
+  remote.mockRejectedValueOnce(new Error('offline'));
+  await sync.sync();
+  expect(sync.status().uploadedEvents).toBe(0);
+  expect(sync.status().pendingBytes).toBe(fs.statSync(file).size);
+  await sync.sync();
+  expect(sync.status().uploadedEvents).toBe(100);
+  expect(sync.status().pendingBytes).toBeGreaterThan(0);
+  await sync.sync();
+  expect(sync.status().uploadedEvents).toBe(101);
+  expect(sync.status().pendingBytes).toBe(0);
+  const lastUpload = sync.status().lastUpload;
+  await sync.sync();
+  expect(sync.status().lastUpload).toBe(lastUpload);
+  expect(remote).toHaveBeenCalledTimes(3);
+});

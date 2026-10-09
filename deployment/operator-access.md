@@ -161,3 +161,17 @@ Viewer restrictions, empty controller list, queue access, active services and
 unchanged machine configuration were checked after the idle service restart.
 The camera returns real but dark frames; check lighting and mounting on site.
 Machine restriction, real badge enrollment and physical commissioning remain pending.
+
+### Usage status reliability
+
+The usage page distinguishes local journal checks from acknowledged uploads.
+It reports unprocessed journal bytes, the last acknowledged upload and the number
+of records acknowledged during this service process. These counters reset on
+restart; the durable cursor still prevents re-uploading acknowledged records.
+An empty machine reports readiness without claiming a hosted connectivity check.
+A missing journal with an existing cursor raises an error instead of retaining
+a stale healthy state. Restore the journal/cursor pair before continuing.
+
+Verified with 671 passing tests, a production UI build, and a localhost badge
+session whose event was acknowledged by the fixture with zero pending bytes.
+Production remains restricted; no synthetic production events were created.
