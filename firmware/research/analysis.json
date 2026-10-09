@@ -1,0 +1,41 @@
+[
+  {
+    "file": "artifacts/carbide-v4-grbl.hex",
+    "file_sha256": "6766b8829e2f01321e9822399879d0994d5747b07b4fba1dfb697157a3802d6c",
+    "image_sha256": "c9ebc4c68066beb65c6c4588cc5ad9927c2b21bc39955963435e669cf198af89",
+    "populated_bytes": 31920,
+    "first_address": 0,
+    "last_address": 31919,
+    "holes": 0,
+    "identity_strings": [
+      "Grbl 1.1f ['$' for help]",
+      "[VER:1.1f.20170131:"
+    ]
+  },
+  {
+    "file": "artifacts/upstream-1.1f-20170131.hex",
+    "file_sha256": "39cbd276e3101d19567b18c6c8c746cadddbfaeb1018f2fec9273e3cf11720a4",
+    "image_sha256": "bf8e6ee8729fc51d975248d9af711f361f02eb8c8dc14e9b9a66f4dad57a02dc",
+    "populated_bytes": 30338,
+    "first_address": 0,
+    "last_address": 30337,
+    "holes": 0,
+    "identity_strings": [
+      "Grbl 1.1f ['$' for help]",
+      "[VER:1.1f.20170131:"
+    ]
+  },
+  {
+    "file": "artifacts/upstream-1.1h-20190825.hex",
+    "file_sha256": "1198b33233d0d89e5798916b1d3125d16dd520bf10cfaa44caaee6074673165d",
+    "image_sha256": "f1c4446577b57bd6e92645104ad27b3067dfb6b2ab782afdc612d0c3c87a2163",
+    "populated_bytes": 29920,
+    "first_address": 0,
+    "last_address": 29919,
+    "holes": 0,
+    "identity_strings": [
+      "Grbl 1.1h ['$' for help]",
+      "[VER:1.1h.20190825:"
+    ]
+  }
+]
