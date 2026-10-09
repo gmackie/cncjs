@@ -107,8 +107,8 @@ capability tokens and raw command payloads are omitted. Session-end events inclu
 elapsed session time; this measures access time, **not verified cutting time**.
 Abrupt power loss can leave a start event without an end. Back up/rotate the log
 with the Pi's operational records. Failure to write an audit event denies the
-associated new session/action. FabForge stores setup-release evidence; other usage
-records currently remain on the Pi. Usage charts and physical runtime reconciliation
+associated new session/action. FabForge stores setup-release evidence; UUID usage records can also synchronize
+to FabForge when upload is enabled. Usage charts and physical runtime reconciliation
 are follow-ups, not implemented billing or attendance records.
 
 ## Deployment and rollback
@@ -126,9 +126,9 @@ Until a real badge is enrolled and commissioning is completed, the shop is a vie
 with no production operator access. This is intentional. To roll back, restore the
 UI, route table and socket engine from the pre-badge archive and restart while idle.
 
-## Machine administration and usage upload (next FabForge release)
+## Machine administration and usage upload
 
-FabForge's companion PR adds `/machines` for workspace owners/admins to enroll,
+FabForge provides `/machines` for workspace owners/admins to enroll,
 replace and revoke member badges. Enrollment requires a masked scan, expiry within
 one year, and explicit machine-training confirmation. The Pi token cannot administer
 grants. This replaces the SQL helper once the companion release is deployed.
@@ -151,3 +151,13 @@ changing the FabForge binding stops uploads with a visible error; reconcile/arch
 the old journal and cursor before starting a new pair. Do not delete pending logs
 to clear an upload error. The bridge sends only allowlisted metadata, not raw badge
 IDs, capability tokens, source payloads or raw G-code.
+
+### Production rollout, 2026-10-08
+
+FabForge machine administration and usage ingestion are deployed, and the production
+usage migration is applied. Upload is enabled on the Pi. The live journal currently
+has no events, so a genuine upload remains to be verified after operator use.
+Viewer restrictions, empty controller list, queue access, active services and
+unchanged machine configuration were checked after the idle service restart.
+The camera returns real but dark frames; check lighting and mounting on site.
+Machine restriction, real badge enrollment and physical commissioning remain pending.
