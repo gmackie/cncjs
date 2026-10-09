@@ -2,9 +2,10 @@ import React, { PureComponent } from 'react';
 import styles from './index.styl';
 
 export default class CameraMonitor extends PureComponent {
-  state = { enabled: false, status: 'off', frame: 0, receivedAt: null };
+  state = { enabled: true, status: 'loading', frame: 0, receivedAt: null };
   componentDidMount() {
     document.addEventListener('visibilitychange', this.visibilityChanged);
+    this.visibilityChanged();
   }
   componentWillUnmount() {
     this.unmounted = true;
@@ -45,7 +46,10 @@ export default class CameraMonitor extends PureComponent {
   failed = () => {
     this.clearTimers();
     if (!this.unmounted) {
-      this.setState({ status: 'error', frame: 0 });
+      this.setState({ status: 'error', frame: 0, receivedAt: null });
+      if (this.state.enabled && !document.hidden) {
+        this.refreshTimer = setTimeout(this.load, 5000);
+      }
     }
   };
   stop = () => {
@@ -73,7 +77,7 @@ export default class CameraMonitor extends PureComponent {
           <div>
             <span className={styles.cameraIcon} aria-hidden="true">◎</span>
             <strong>{labels[status]}</strong>
-            <p>{{ error: 'Check camera power and USB connection. You can keep reviewing the queue.', paused: 'The preview resumes when you return to this screen.' }[status] || 'View the work area without enabling machine controls.'}</p>
+            <p>{{ error: 'Check camera power and USB connection. Retrying automatically every 5 seconds.', paused: 'The preview resumes when you return to this screen.' }[status] || 'View the work area without enabling machine controls.'}</p>
             {status === 'error' && <button type="button" onClick={this.load}>Retry camera</button>}
           </div>
 )}

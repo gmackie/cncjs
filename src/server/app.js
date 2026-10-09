@@ -27,6 +27,7 @@ import {
   LanguageDetector as i18nextLanguageDetector,
   handle as i18nextHandle
 } from 'i18next-http-middleware';
+import { kioskGuard } from './lib/kiosk';
 import urljoin from './lib/urljoin';
 import logger from './lib/logger';
 import settings from './config/settings';
@@ -230,6 +231,7 @@ const appMain = () => {
           // User Validation
           const user = jwt.verify(token, settings.secret) || {};
           await validateUser(user);
+          req.user = user;
           bypass = true;
         } catch (err) {
           log.warn(err);
@@ -246,6 +248,8 @@ const appMain = () => {
       next();
     });
   }
+
+  app.use(urljoin(settings.route, 'api'), kioskGuard);
 
   { // Register API routes with public access
     // Also see "src/app/app.js"

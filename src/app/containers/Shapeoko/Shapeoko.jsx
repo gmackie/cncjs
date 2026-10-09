@@ -229,84 +229,85 @@ export default class Shapeoko extends PureComponent {
           </section>
           {machineError && <p className={styles.alert} role="status">The Pi connection was interrupted. Machine status is unavailable; reconnecting automatically.</p>}
           {queueState === 'offline' && <p className={styles.alert} role="status">FabForge is unavailable. {queueCheckedAt ? 'Showing the last received queue; it may have changed.' : 'The queue has not loaded yet.'} Retrying automatically.</p>}
-          {queue && (
-            <FabForge
-              embedded
-              key={operator ? 'operator' : 'viewer'}
-              canControl={operator || !!(access && !access.enabled)}
-              badgeAccess={!!(access && access.enabled)}
-              access={access}
-              onAccessChange={onAccessChange}
-            />
+          <div className={styles.workstationLayout}>
+            <div className={styles.workstationPages}>
+              {queue && (
+              <FabForge
+                embedded
+                key={operator ? 'operator' : 'viewer'}
+                canControl={operator || !!(access && !access.enabled)}
+                badgeAccess={!!(access && access.enabled)}
+                access={access}
+                onAccessChange={onAccessChange}
+              />
           )}
-          {controls && (
-            <MachineControls
-              key={operator ? access.operator.id : 'viewer'}
-              machine={machine}
-              fresh={fresh}
-              canOperate={canOperate}
-              access={access}
-            />
+              {controls && (
+              <MachineControls
+                key={operator ? access.operator.id : 'viewer'}
+                machine={machine}
+                fresh={fresh}
+                canOperate={canOperate}
+                access={access}
+              />
           )}
-          {usage && <Usage />}
-          {commissioning && (
-            <Commissioning
-              machine={machines.length === 1 ? machine : null} fresh={fresh}
-              canOperate={canOperate} access={access}
-            />
+              {usage && <Usage />}
+              {commissioning && (
+              <Commissioning
+                machine={machines.length === 1 ? machine : null} fresh={fresh}
+                canOperate={canOperate} access={access}
+              />
           )}
-          {setup && (
-          <ProbeSetup
-            machine={machines.length === 1 ? machine : null} fresh={fresh} canOperate={canOperate}
-            access={access}
-          />
+              {setup && (
+              <ProbeSetup
+                machine={machines.length === 1 ? machine : null} fresh={fresh} canOperate={canOperate}
+                access={access}
+              />
 )}
-          {!queue && !controls && !usage && !setup && !commissioning && (
-            <div>
-              <div className={styles.heroGrid}>
-                <section className={styles.machineCard}>
-                  <div className={styles.cardHeading}>
-                    <div>
-                      <span className={styles.tiny}>
-                        {laser
+              {!queue && !controls && !usage && !setup && !commissioning && (
+              <div>
+                <div className={styles.heroGrid}>
+                  <section className={styles.machineCard}>
+                    <div className={styles.cardHeading}>
+                      <div>
+                        <span className={styles.tiny}>
+                          {laser
                           ? 'ENGRAVING CONFIGURATION'
                           : 'MILLING CONFIGURATION'}
+                        </span>
+                        <h2>{laser ? 'J Tech 7W' : 'Shapeoko + DWP611'}</h2>
+                      </div>
+                      <span className={styles.outlineTag}>
+                        {laser ? 'SETUP REQUIRED' : '3 XL'}
                       </span>
-                      <h2>{laser ? 'J Tech 7W' : 'Shapeoko + DWP611'}</h2>
                     </div>
-                    <span className={styles.outlineTag}>
-                      {laser ? 'SETUP REQUIRED' : '3 XL'}
-                    </span>
-                  </div>
-                  <MachineDrawing laser={laser} />
-                  <div className={styles.machineCaption}>
-                    <span>
-                      {laser
+                    <MachineDrawing laser={laser} />
+                    <div className={styles.machineCaption}>
+                      <span>
+                        {laser
                         ? 'Diode laser · focus at the work surface'
                         : 'Trim router · manual switch & speed dial'}
-                    </span>
-                    <span>XL / WIDE BED</span>
-                  </div>
-                </section>
-                <CameraMonitor />
-              </div>
-              <section className={styles.telemetry} aria-label="Machine status">
-                <div>
-                  <span className={styles.tiny}>CONTROLLER</span>
-                  <strong>{status}</strong>
-                  <small>
-                    {connected
+                      </span>
+                      <span>XL / WIDE BED</span>
+                    </div>
+                  </section>
+                </div>
+                <section className={styles.telemetry} aria-label="Machine status">
+                  <div>
+                    <span className={styles.tiny}>CONTROLLER</span>
+                    <strong>{status}</strong>
+                    <small>
+                      {connected
                       ? 'Grbl · live report'
                       : 'Awaiting operator connection'}
-                  </small>
-                </div>
-                {['x', 'y', 'z'].map((axis) => (
-                  <div key={axis}>
-                    <span className={styles.tiny}>
-                      WORK {axis.toUpperCase()}
-                    </span>
-                    <strong className={styles.coordinate}>
-                      {connected &&
+                    </small>
+                  </div>
+                  {['x', 'y', 'z'].map((axis) => (
+                    <div key={axis}>
+                      <span className={styles.tiny}>
+                        WORK {axis.toUpperCase()}
+                      </span>
+                      <strong className={styles.coordinate}>
+                        {connected &&
                       Number.isFinite(
                         Number(
                           get(machine, `controller.state.status.wpos.${axis}`)
@@ -316,31 +317,31 @@ export default class Shapeoko extends PureComponent {
                             get(machine, `controller.state.status.wpos.${axis}`)
                           ).toFixed(3)
                         : '—'}
-                      <small>
-                        {connected ? units : ''}
-                      </small>
-                    </strong>
-                    <small>Work coordinates</small>
-                  </div>
+                        <small>
+                          {connected ? units : ''}
+                        </small>
+                      </strong>
+                      <small>Work coordinates</small>
+                    </div>
                 ))}
-              </section>
-              {laser || milling ? (
-                <section className={styles.workflow}>
-                  <div className={styles.sectionTitle}>
-                    <div>
-                      <span className={styles.eyebrow}>
-                        {laser ? 'ENGRAVING WORKFLOW' : 'MILLING WORKFLOW'}
-                      </span>
-                      <h2>
-                        {laser
+                </section>
+                {laser || milling ? (
+                  <section className={styles.workflow}>
+                    <div className={styles.sectionTitle}>
+                      <div>
+                        <span className={styles.eyebrow}>
+                          {laser ? 'ENGRAVING WORKFLOW' : 'MILLING WORKFLOW'}
+                        </span>
+                        <h2>
+                          {laser
                           ? 'From installation to engraving'
                           : 'From stock to finished part'}
-                      </h2>
+                        </h2>
+                      </div>
+                      <Link to="/workspace">Machine controls ↗</Link>
                     </div>
-                    <Link to="/workspace">Machine controls ↗</Link>
-                  </div>
-                  <div className={styles.steps}>
-                    {(laser
+                    <div className={styles.steps}>
+                      {(laser
                       ? [
                           [
                             '01',
@@ -392,32 +393,32 @@ export default class Shapeoko extends PureComponent {
                         <p>{copy}</p>
                       </article>
                     ))}
-                  </div>
-                  {laser && (
-                  <div className={styles.laserParameters}>
-                    {[['$30', 'Maximum power scale'], ['$31', 'Minimum power scale'], ['$32', 'Laser mode · 1 = enabled']].map(([key, label]) => <div key={key}><span>{label}</span><strong>{connected ? get(machine, ['controller', 'settings', 'settings', key], '—') : '—'}</strong><small>Reported {key} · read only</small></div>)}
-                  </div>
+                    </div>
+                    {laser && (
+                    <div className={styles.laserParameters}>
+                      {[['$30', 'Maximum power scale'], ['$31', 'Minimum power scale'], ['$32', 'Laser mode · 1 = enabled']].map(([key, label]) => <div key={key}><span>{label}</span><strong>{connected ? get(machine, ['controller', 'settings', 'settings', key], '—') : '—'}</strong><small>Reported {key} · read only</small></div>)}
+                    </div>
 )}
-                  <p className={styles.actions}>
-                    <a
-                      className={styles.guideLink} href={`assets/guides/${laser ? 'jtech-7w' : 'dwp611'}.html`} target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Read the full installation &amp; operating guide ↗
-                    </a>
-                  </p>
-                  <div className={styles.workflowNote}>
-                    <strong>
-                      {laser
+                    <p className={styles.actions}>
+                      <a
+                        className={styles.guideLink} href={`assets/guides/${laser ? 'jtech-7w' : 'dwp611'}.html`} target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Read the full installation &amp; operating guide ↗
+                      </a>
+                    </p>
+                    <div className={styles.workflowNote}>
+                      <strong>
+                        {laser
                         ? 'Laser output remains uncommissioned.'
                         : 'The DWP611 is manually controlled.'}
-                    </strong>
-                    <span>
-                      {laser
+                      </strong>
+                      <span>
+                        {laser
                         ? 'Selecting this page does not change Grbl mode or energize the laser.'
                         : 'M3/M5 do not switch the router without a separately installed and verified relay. The software cannot set its RPM.'}
-                    </span>
-                    {laser && (
+                      </span>
+                      {laser && (
                       <a
                         href="https://jtechphotonics.com/?page_id=3145"
                         target="_blank"
@@ -426,8 +427,8 @@ export default class Shapeoko extends PureComponent {
                         Installation guide ↗
                       </a>
                     )}
-                  </div>
-                </section>
+                    </div>
+                  </section>
               ) : (
                 <div className={styles.bottomGrid}>
                   <section className={styles.queueSummary}>
@@ -479,8 +480,21 @@ export default class Shapeoko extends PureComponent {
                   </section>
                 </div>
               )}
-            </div>
+              </div>
           )}
+            </div>
+            <aside className={styles.cameraRail} aria-label="Workstation monitor">
+              <CameraMonitor />
+              <section className={styles.panel}>
+                <span className={styles.eyebrow}>AT A GLANCE</span>
+                <h2>{status}</h2>
+                <p>{operator ? access.operator.name : 'Viewer · badge in to operate'}</p>
+                <p>{get(machine, 'sender.name') || 'No program loaded'}</p>
+                <p className={styles.subtle}>DWP611 power and speed are manual. Laser installation and machine commissioning remain pending.</p>
+                <Link to="/commissioning">Machine commissioning ↗</Link>
+              </section>
+            </aside>
+          </div>
           <footer className={styles.footer}>
             <span>
               SHAPEOKO 3 XL <span> / </span> FABFORGE CONNECTED WORKSHOP

@@ -2,7 +2,6 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import get from 'lodash/get';
 import { Link } from 'react-router-dom';
-import CameraMonitor from './CameraMonitor';
 import MachineControls from './MachineControls';
 import { probeTelemetry } from './probe-telemetry';
 import styles from './index.styl';
@@ -82,7 +81,6 @@ export default class ProbeSetup extends PureComponent {
             </div>
           </section>
           <div className={styles.setupMonitor}>
-            <CameraMonitor />
             <section className={styles.panel} aria-label="Probe and position monitor">
               <span className={styles.eyebrow}>CONTROLLER OBSERVATION</span>
               <h2>{telemetry.label}</h2>

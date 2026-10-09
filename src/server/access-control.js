@@ -1,6 +1,7 @@
 import { ensureArray } from 'ensure-type';
 import _ from 'lodash';
 import rangeCheck from 'range_check';
+import { isKiosk, kioskEnabled } from './lib/kiosk';
 import settings from './config/settings';
 import config from './services/configstore';
 
@@ -36,6 +37,14 @@ export const authorizeIPAddress = (ipaddr) => new Promise((resolve, reject) => {
 });
 
 export const validateUser = (user) => new Promise((resolve, reject) => {
+  if (isKiosk(user)) {
+    if (kioskEnabled()) {
+      resolve();
+    } else {
+      reject(new Error('Kiosk access is disabled.'));
+    }
+    return;
+  }
   const { id = null, name = null } = { ...user };
 
   const users = ensureArray(config.get('users'))

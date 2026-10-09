@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { isKiosk, kioskEnabled } from '../kiosk';
 import access from './service';
 import machineMonitor from '../fabforge/machine-monitor';
 import { recentUsage, usageSync } from './usage';
@@ -159,6 +160,10 @@ export const socketGate = (socket, service = access, reviewService = fabforge, c
   });
   socket.use(async (packet, next) => {
     const [event, port, command, ...args] = packet;
+    if (isKiosk(socket.decoded_token) && (!kioskEnabled() || !service.enabled())) {
+      socket.emit('operator:denied', { msg: 'Kiosk access requires badge protection.' });
+      return;
+    }
     if (!service.enabled() || event === 'list' || event === 'operator:bind') {
       next();
       return;

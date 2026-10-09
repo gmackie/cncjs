@@ -761,3 +761,39 @@
     grid-template-columns minmax(0, 1fr)
   .setupInstruction
     min-height 0
+
+.workstationLayout
+  display grid
+  grid-template-columns minmax(0, 1fr) 300px
+  align-items start
+  gap 24px
+.workstationPages
+  min-width 0
+  .heroGrid,.setupGrid,.controlsGrid
+    grid-template-columns minmax(0, 1fr)
+.cameraRail
+  position sticky
+  top 96px
+  display grid
+  gap 18px
+  min-width 0
+  .cardHeading
+    flex-wrap wrap
+  .cameraViewport
+    min-height 225px
+    > div
+      padding 12px
+    .cameraIcon
+      font-size 28px
+      margin-bottom 4px
+  .cameraFooter
+    flex-wrap wrap
+    gap 6px
+@media (max-width: 1000px)
+  .workstationLayout
+    grid-template-columns minmax(0, 1fr)
+  .cameraRail
+    position static
+    grid-row 1
+    > section + section
+      display none
