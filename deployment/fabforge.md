@@ -196,3 +196,29 @@ The companion FabForge machine-integration change exposes a request-scoped
 `idempotencyKey` on production-record creation. CNCjs now sends a stable key derived
 from operator session/release/hash. Its conservative local ambiguous-save guard
 remains compatible with older FabForge deployments that ignore this optional field.
+
+## Hosted appliance monitoring
+
+The enrolled machine is visible at:
+https://fab.forgegraf.com/machines?workspaceId=f131d21d-8e70-4237-805f-a8775b0fcd8c
+Sign in as a workspace administrator. The Machines page shows appliance online/offline,
+controller connection and telemetry freshness, setup release, hash-matched loaded
+job and sender line acknowledgements. These do not prove completed machining.
+
+After deploying FabForge's resource `/monitor` API, set `CNCJS_MACHINE_MONITOR=1`
+in the Pi service environment. A 15-second loop reports allowlisted metadata from
+existing controllers only; it never opens serial or sends commands. Hosted reports
+expire after 60 seconds; local Grbl telemetry after ten. Monitor upload status is
+included in `/api/operator-access/usage` alongside usage synchronization.
+
+Create real work orders in FabForge and assign jobs to the existing Shapeoko resource.
+No duplicate enrollment is needed. Administrators can edit queued-job priorities
+(lower first; unnumbered last) and follow job links for review/disposition. Changes
+use optimistic concurrency and never start or interrupt the machine. Setup release
+and Start remain separate, and badge grants/commissioning remain required.
+
+Deploy only the compiled `server/lib/fabforge/machine-monitor.js` and updated
+`server/lib/operator-access/{service,gateway}.js` for this Pi change. Back up those
+files and the private environment first; check the authenticated controller list
+and access status before restarting while idle. Roll back the files/environment
+and restart while idle. There is no new database migration.

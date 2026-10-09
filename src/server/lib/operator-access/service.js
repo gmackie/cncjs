@@ -170,6 +170,18 @@ export const createAccess = ({
     status,
     check,
     requireOperator,
+    monitoring() {
+      expire();
+      return {
+        operatorId: lease ? lease.operator.id : null,
+        release: lease && lease.release ? {
+          workOrderId: lease.release.workOrderId,
+          jobId: lease.release.jobId,
+          sha256: lease.release.sha256,
+          releasedAt: lease.release.releasedAt,
+        } : null,
+      };
+    },
     async badgeIn(badge) {
       if (!enabled()) {
         fail('Badge access is not enabled.', 409);

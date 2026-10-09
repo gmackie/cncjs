@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import access from './service';
+import machineMonitor from '../fabforge/machine-monitor';
 import { recentUsage, usageSync } from './usage';
 import store from '../../store';
 import { createService } from '../fabforge/service';
@@ -33,12 +34,17 @@ const respond = (action) => async (req, res) => {
   }
 };
 let usageTimer;
+let monitorTimer;
 export const installRoutes = (app, prefix) => {
+  if (!monitorTimer) {
+    monitorTimer = setInterval(() => machineMonitor.sync(), 15000);
+    monitorTimer.unref();
+  }
   if (!usageTimer) {
     usageTimer = setInterval(() => usageSync.sync(), 30000);
     usageTimer.unref();
   }
-  app.get(`${prefix}/operator-access/usage`, respond(() => ({ ...recentUsage(), synchronization: usageSync.status() })));
+  app.get(`${prefix}/operator-access/usage`, respond(() => ({ ...recentUsage(), synchronization: usageSync.status(), monitoring: machineMonitor.status() })));
   app.post(
     `${prefix}/operator-access/production-records`,
     respond((req) => production(tokenFrom(req), req.body))
