@@ -8,6 +8,7 @@ import AccessPanel from '../OperatorAccess/AccessPanel';
 import MachineDrawing from './MachineDrawing';
 import MachineControls from './MachineControls';
 import Usage from './Usage';
+import CameraMonitor from './CameraMonitor';
 import styles from './index.styl';
 
 const pages = [
@@ -30,9 +31,10 @@ export default class Shapeoko extends PureComponent {
     orders: [],
     fresh: false,
     error: '',
-    camera: false,
-    cameraFailed: false,
-    frame: 0,
+    queueState: 'loading',
+    queueCheckedAt: null,
+    machineError: false,
+    checked: false,
     badge: false,
   };
   componentDidMount() {
@@ -42,38 +44,40 @@ export default class Shapeoko extends PureComponent {
   componentWillUnmount() {
     this.unmounted = true;
     clearTimeout(this.timer);
-    clearTimeout(this.cameraTimer);
     clearTimeout(this.staleTimer);
   }
   poll = async () => {
-    let machineReceivedAt = 0;
-    const results = await Promise.allSettled([
+    // Apply local telemetry immediately; a slow hosted queue must not delay it.
+    await Promise.allSettled([
       api.controllers.get().then(result => {
- machineReceivedAt = Date.now(); return result;
-}),
-      api.fabforge('work-orders'),
+        if (this.unmounted) {
+          return;
+        }
+        this.setState({ machines: result.body, fresh: true, checked: true, machineError: false });
+        clearTimeout(this.staleTimer);
+        this.staleTimer = setTimeout(() => {
+          if (!this.unmounted) {
+            this.setState({ fresh: false });
+          }
+        }, 6000);
+      }).catch(() => {
+        if (!this.unmounted) {
+          this.setState({ machines: [], fresh: false, checked: true, machineError: true });
+        }
+      }),
+      api.fabforge('work-orders').then(result => {
+        if (!this.unmounted) {
+          this.setState({ orders: result.workOrders, queueState: 'ready', queueCheckedAt: new Date().toLocaleTimeString() });
+        }
+      }).catch(() => {
+        if (!this.unmounted) {
+          this.setState({ queueState: 'offline' });
+        }
+      }),
     ]);
-    if (this.unmounted) {
-      return;
+    if (!this.unmounted) {
+      this.timer = setTimeout(this.poll, 4000);
     }
-    this.setState({
-      machines: results[0].status === 'fulfilled' ? results[0].value.body : [],
-      orders:
-        results[1].status === 'fulfilled'
-          ? results[1].value.workOrders
-          : this.state.orders,
-      fresh: results[0].status === 'fulfilled' && Date.now() - machineReceivedAt < 6000,
-      error: results.some((result) => result.status === 'rejected')
-        ? 'Live updates unavailable. Check the connection.'
-        : '',
-    });
-    clearTimeout(this.staleTimer);
-    this.staleTimer = setTimeout(() => {
- if (!this.unmounted) {
- this.setState({ fresh: false });
-}
-}, Math.max(0, 6000 - (Date.now() - machineReceivedAt)));
-    this.timer = setTimeout(this.poll, 4000);
   };
   hold = async () => {
     try {
@@ -82,17 +86,9 @@ export default class Shapeoko extends PureComponent {
       this.setState({ error: err.message });
     }
   };
-  cameraFrame = () => {
-    clearTimeout(this.cameraTimer);
-    this.cameraTimer = setTimeout(() => {
-      if (!this.unmounted) {
-        this.setState({ frame: Date.now() });
-      }
-    }, 1500);
-  };
   render() {
     const { access, location, onAccessChange, error } = this.props;
-    const { machines, orders, fresh, camera, cameraFailed, frame, badge } =
+    const { machines, orders, fresh, badge, queueState, queueCheckedAt, machineError, checked } =
       this.state;
     const pathname = location.pathname;
     const laser = pathname === '/laser';
@@ -103,9 +99,16 @@ export default class Shapeoko extends PureComponent {
     );
     const machine = machines[0];
     const connected = fresh && !!machine;
-    const status = connected
-      ? get(machine, 'controller.state.status.activeState', 'Connected')
-      : 'Disconnected';
+    let status = 'Not connected';
+    if (!checked) {
+      status = 'Checking connection';
+    } else if (machineError) {
+      status = 'Connection lost';
+    } else if (!fresh && machine) {
+      status = 'Status overdue';
+    } else if (connected) {
+      status = get(machine, 'controller.state.status.activeState', 'Connected');
+    }
     const milling = pathname === '/milling';
     const queue = pathname === '/fabforge';
     const controls = pathname === '/workspace';
@@ -113,11 +116,17 @@ export default class Shapeoko extends PureComponent {
     const active = orders.filter(
       (order) => !['complete', 'cancelled'].includes(order.status)
     );
-    const title = { '/usage': 'Operator usage', '/fabforge': 'Work queue', '/workspace': 'Machine controls', '/laser': 'Light, precisely placed.', '/milling': 'Make the first cut count.' }[pathname] || 'Your workshop, in view.';
+    const title = { '/usage': 'Operator usage', '/fabforge': 'Work queue', '/workspace': 'Machine controls', '/laser': 'Laser engraving', '/milling': 'Router milling' }[pathname] || 'Machine overview';
     const eyebrow = { '/laser': 'J TECH PHOTONICS / 7W DIODE', '/milling': 'DEWALT DWP611 / ⅛″ TOOLING', '/fabforge': 'FABFORGE / PRODUCTION' }[pathname] || 'SHAPEOKO 3 XL / MACHINE 01';
     const units = Number(get(machine, 'controller.settings.settings.$13')) === 1 ? 'in' : 'mm';
     return (
       <div className={styles.shell}>
+        <a
+          className={styles.skipLink} href="#workstation-content" onClick={event => {
+ event.preventDefault(); document.getElementById('workstation-content').focus();
+}}
+        >Skip to main content
+        </a>
         <header className={styles.topbar}>
           <Link className={styles.brand} to="/shop">
             <span className={styles.brandMark}>
@@ -135,6 +144,8 @@ export default class Shapeoko extends PureComponent {
           </div>
           <button
             className={styles.badgeButton}
+            aria-expanded={badge}
+            aria-controls="operator-access-panel"
             type="button"
             onClick={() => this.setState({ badge: !badge })}
           >
@@ -177,9 +188,9 @@ export default class Shapeoko extends PureComponent {
             Open FabForge <span>↗</span>
           </a>
         </aside>
-        <main className={styles.main}>
+        <main id="workstation-content" tabIndex="-1" className={styles.main}>
           {badge && (
-            <div className={styles.access}>
+            <div id="operator-access-panel" className={styles.access}>
               <AccessPanel
                 access={access}
                 error={error}
@@ -205,6 +216,13 @@ export default class Shapeoko extends PureComponent {
               {operator ? 'OPERATOR' : 'VIEW ONLY'}
             </span>
           </div>
+          <section className={styles.applianceStatus} aria-label="Workstation connections">
+            <div><span className={styles.tiny}>MACHINE</span><strong><i className={connected ? styles.liveDot : styles.dot} />{status}</strong></div>
+            <div><span className={styles.tiny}>FABFORGE QUEUE</span><strong><i className={queueState === 'ready' ? styles.liveDot : styles.dot} />{queueState === 'ready' ? `${active.length} open work orders` : { loading: 'Connecting…', offline: 'Updates unavailable' }[queueState]}</strong><small>{queueCheckedAt ? `Last received ${queueCheckedAt}` : 'Graham Mackie’s workspace'}</small></div>
+            <div><span className={styles.tiny}>ACCESS</span><strong>{operator ? access.operator.name : 'Observer mode'}</strong><small>{operator ? 'Release for setup; Start separately' : 'Browse work and preview toolpaths'}</small></div>
+          </section>
+          {machineError && <p className={styles.alert} role="status">The Pi connection was interrupted. Machine status is unavailable; reconnecting automatically.</p>}
+          {queueState === 'offline' && <p className={styles.alert} role="status">FabForge is unavailable. {queueCheckedAt ? 'Showing the last received queue; it may have changed.' : 'The queue has not loaded yet.'} Retrying automatically.</p>}
           {queue && (
             <FabForge
               embedded
@@ -252,63 +270,7 @@ export default class Shapeoko extends PureComponent {
                     <span>XL / WIDE BED</span>
                   </div>
                 </section>
-                <section className={styles.cameraCard}>
-                  <div className={styles.cardHeading}>
-                    <div>
-                      <span className={styles.tiny}>AT THE MACHINE</span>
-                      <h2>Live camera</h2>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => this.setState({
-                          camera: !camera,
-                          cameraFailed: false,
-                          frame: Date.now(),
-                        })}
-                    >
-                      {camera ? 'Close' : 'View live'} ↗
-                    </button>
-                  </div>
-                  <div className={styles.cameraViewport}>
-                    {camera && !cameraFailed ? (
-                      <img
-                        alt="Live view of the Shapeoko work area"
-                        src={`/camera/?action=snapshot&_=${frame}`}
-                        onLoad={this.cameraFrame}
-                        onError={() => this.setState({ cameraFailed: true })}
-                      />
-                    ) : (
-                      <div>
-                        <span className={styles.cameraIcon} aria-hidden="true">
-                          ◎
-                        </span>
-                        <strong>
-                          {cameraFailed
-                            ? 'Camera unavailable'
-                            : 'A window into the work'}
-                        </strong>
-                        <p>
-                          {cameraFailed
-                            ? 'Check the USB camera connection, then reopen the view.'
-                            : 'Open the camera to watch the machine from here.'}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                  <div className={styles.cameraFooter}>
-                    <span>
-                      <i
-                        className={
-                          camera && !cameraFailed ? styles.liveDot : styles.dot
-                        }
-                      />
-                      {camera && !cameraFailed
-                        ? 'Snapshot feed · 1.5s refresh'
-                        : 'Raspberry Pi USB camera'}
-                    </span>
-                    <span>VIEW ONLY</span>
-                  </div>
-                </section>
+                <CameraMonitor />
               </div>
               <section className={styles.telemetry} aria-label="Machine status">
                 <div>
@@ -448,7 +410,7 @@ export default class Shapeoko extends PureComponent {
                         <span className={styles.eyebrow}>UP NEXT</span>
                         <h2>
                           Work queue{' '}
-                          <span className={styles.count}>{active.length}</span>
+                          <span className={styles.count}>{queueState === 'ready' ? active.length : '—'}</span>
                         </h2>
                       </div>
                       <Link to="/fabforge">View queue ↗</Link>
@@ -469,10 +431,9 @@ export default class Shapeoko extends PureComponent {
                       <div className={styles.emptyQueue}>
                         <span aria-hidden="true">≡</span>
                         <div>
-                          <strong>Room for your next project.</strong>
+                          <strong>{{ ready: 'No work orders waiting', loading: 'Loading your work queue…', offline: 'Queue unavailable' }[queueState]}</strong>
                           <p>
-                            Work orders from Graham Mackie’s workspace will
-                            appear here.
+                            {queueState === 'ready' ? 'Create a work order in FabForge to bring it to this workstation.' : 'Work orders will appear when the FabForge connection is restored.'}
                           </p>
                         </div>
                       </div>
@@ -480,7 +441,7 @@ export default class Shapeoko extends PureComponent {
                   </section>
                   <section className={styles.readiness}>
                     <span className={styles.eyebrow}>BEFORE PRODUCTION</span>
-                    <h2>Make ready. Then make.</h2>
+                    <h2>Finish machine setup</h2>
                     <p>
                       Homing and XL travel verification, BitSetter calibration,
                       and laser installation are still pending.

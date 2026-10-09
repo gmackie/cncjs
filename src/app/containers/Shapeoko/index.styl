@@ -621,3 +621,70 @@
   inset 0
   z-index 50
   background #14251ac9
+
+.skipLink
+  position fixed
+  left 16px
+  top -80px
+  z-index 100
+  padding 14px 20px
+  background #fff
+  border 2px solid #293d33
+  border-radius 6px
+  &:focus
+    top 12px
+.applianceStatus
+  display grid
+  grid-template-columns repeat(3,minmax(0,1fr))
+  gap 20px
+  padding 18px 22px
+  margin-bottom 24px
+  background #e9ede5
+  border 1px solid #d8dfd1
+  border-radius 10px
+  > div
+    min-width 0
+  .tiny,strong,small
+    display block
+  strong
+    font-size 13px
+    font-weight 600
+    margin-top 5px
+    overflow-wrap anywhere
+  small
+    font-size 11px
+    color #58665a
+    margin-top 3px
+  i
+    margin-right 7px
+.cameraHint
+  font-size 11px
+  color #606f63
+  margin 0
+  padding 0 20px 18px
+.cameraCard .cardHeading button
+  min-width 88px
+  padding 8px
+.cameraViewport
+  position relative
+.cameraFooter
+  color #59685d
+.shell
+  --shop-muted #58675d
+  .tiny,.eyebrow
+    color #606e62
+  .subtle
+    color #61705a
+@media (max-width: 620px)
+  .applianceStatus
+    grid-template-columns 1fr
+    gap 12px
+    padding 16px
+    > div + div
+      border-top 1px solid #d0d9c8
+      padding-top 12px
+  .cameraCard .cardHeading
+    gap 8px
+@media (prefers-reduced-motion: reduce)
+  .shell button
+    transition none

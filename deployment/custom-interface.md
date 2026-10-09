@@ -53,3 +53,23 @@ Deploy only the compiled `dist/cncjs/app` for this UI update. Preserve the insta
 badge-access HTTP/socket hooks and server modules. Back up the current app, verify
 no active machine workflow, replace assets and restart CNCjs to reload its cached
 index template. Physical commissioning and badge enrollment are still pending.
+
+## Appliance polish (2026-10-08)
+
+The shell now separates machine connectivity, FabForge queue health and operator
+access in a persistent status strip. Queue failures retain the last received work
+orders with an explicit stale-data notice rather than presenting an empty queue.
+Local telemetry is applied as soon as it arrives, without waiting for the hosted
+queue response. Page titles use direct workflow names and a keyboard skip link
+focuses the main content without changing the hash route.
+
+The dedicated camera component shows loading, received-frame time, unavailable and
+paused states. An eight-second timeout leads to Retry; background tabs pause image
+requests and resume when visible. Opening a preview does not claim that a frame has
+arrived. Closing/unmounting clears timers. Touch targets, status contrast and reduced
+motion treatment were improved.
+
+Validation: changed JavaScript lint and production build pass (existing asset-size
+warnings remain). Browser checks cover desktop layout without horizontal overflow,
+camera failure/retry, hosted queue failure/recovery with cached rows, and keyboard
+skip navigation. Physical commissioning and genuine badge enrollment remain open.
