@@ -12,14 +12,14 @@ main{max-width:960px;padding:32px 28px 70px;margin:auto;background:white}h1{font
 @media(max-width:600px){main{padding:22px 18px}h1{font-size:29px}table{font-size:12px}td,th{padding:7px;overflow-wrap:anywhere}}
 @media print{header,.toc,.print{display:none}body,main{background:white}main{max-width:none;padding:0;font-size:10pt}h1{font-size:24pt}h2{break-after:avoid;font-size:15pt;margin-top:24px}tr,li{break-inside:avoid}a{color:inherit}table{font-size:9pt}@page{margin:18mm}}
 '''
-for name in ('dwp611', 'jtech-7w'):
+for name in ('dwp611', 'jtech-7w', 'bitzero-bitsetter'):
     source = root / 'deployment/guides' / (name + '.md')
     content = markdown2.markdown(source.read_text(), extras=['tables', 'header-ids', 'toc'])
-    content_html = str(content).replace('href="dwp611.md"', 'href="dwp611.html"').replace('href="jtech-7w.md"', 'href="jtech-7w.html"')
+    content_html = str(content).replace('href="dwp611.md"', 'href="dwp611.html"').replace('href="jtech-7w.md"', 'href="jtech-7w.html"').replace('href="bitzero-bitsetter.md"', 'href="bitzero-bitsetter.html"')
     section_start = content_html.index('<h2')
     intro, sections = content_html[:section_start], content_html[section_start:]
     title = source.read_text().splitlines()[0][2:]
-    page = f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{html.escape(title)} · Shapeoko workstation</title><style>{style}</style></head><body><header><nav aria-label="Operator guides"><a href="dwp611.html">DWP611 milling</a><a href="jtech-7w.html">J Tech 7W laser</a></nav><p>SHAPEOKO 3 XL · OPERATOR HANDBOOK · 2026-10-09</p></header><main><button class="print" onclick="window.print()">Print / save as PDF</button>{intro}<nav class="toc" aria-label="On this page">{content.toc_html}</nav>{sections}</main></body></html>'''
+    page = f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{html.escape(title)} · Shapeoko workstation</title><style>{style}</style></head><body><header><nav aria-label="Operator guides"><a href="dwp611.html">DWP611 milling</a><a href="jtech-7w.html">J Tech 7W laser</a><a href="bitzero-bitsetter.html">BitZero V2 &amp; BitSetter</a></nav><p>SHAPEOKO 3 XL · OPERATOR HANDBOOK · 2026-10-09</p></header><main><button class="print" onclick="window.print()">Print / save as PDF</button>{intro}<nav class="toc" aria-label="On this page">{content.toc_html}</nav>{sections}</main></body></html>'''
     target = root / 'src/app/assets/guides' / (name + '.html')
     target.write_text(page)
     print(target.relative_to(root))
