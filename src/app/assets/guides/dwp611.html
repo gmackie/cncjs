@@ -1,0 +1,216 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DWP611 milling guide · Shapeoko workstation</title><style>
+:root{color-scheme:light;font-family:system-ui,-apple-system,sans-serif;color:#24352c;background:#f5f5ef;line-height:1.65}
+*{box-sizing:border-box}body{margin:0}header{background:#203c2c;color:white;padding:22px max(20px,calc((100% - 960px)/2));}header a{color:white;margin-right:22px}header p{margin:8px 0 0;font-size:13px;color:#d3dfd3}
+main{max-width:960px;padding:32px 28px 70px;margin:auto;background:white}h1{font-size:36px;line-height:1.15}h2{margin-top:44px;padding-top:18px;border-top:1px solid #dce2d8;line-height:1.3;scroll-margin-top:20px}a{color:#24613c;text-underline-offset:3px}li{padding:5px 0}strong{font-weight:650}table{width:100%;border-collapse:collapse;font-size:14px;margin:22px 0}td,th{border:1px solid #d6ddcf;padding:12px;text-align:left;vertical-align:top}th{background:#edf2e8}code{background:#edf2e8;padding:2px 4px;overflow-wrap:anywhere}button{font:inherit;cursor:pointer;padding:10px 18px;border:1px solid #c8d5c8;border-radius:6px;background:white;color:#203c2c}nav.toc{background:#edf2e8;padding:18px 24px;border-radius:8px}nav.toc a{display:block;padding:5px 0;font-size:14px}:focus-visible{outline:3px solid #cb8138;outline-offset:3px}
+@media(max-width:600px){main{padding:22px 18px}h1{font-size:29px}table{font-size:12px}td,th{padding:7px;overflow-wrap:anywhere}}
+@media print{header,.toc,.print{display:none}body,main{background:white}main{max-width:none;padding:0;font-size:10pt}h1{font-size:24pt}h2{break-after:avoid;font-size:15pt;margin-top:24px}tr,li{break-inside:avoid}a{color:inherit}table{font-size:9pt}@page{margin:18mm}}
+</style></head><body><header><nav aria-label="Operator guides"><a href="dwp611.html">DWP611 milling</a><a href="jtech-7w.html">J Tech 7W laser</a></nav><p>SHAPEOKO 3 XL · OPERATOR HANDBOOK · 2026-10-09</p></header><main><button class="print" onclick="window.print()">Print / save as PDF</button><h1 id="dwp611-milling-guide">DWP611 milling guide</h1>
+
+<p><strong>Shapeoko 3 XL · DeWalt DWP611 · ⅛″ shank tooling · BitSetter · FabForge/CNCjs</strong><br />
+Revision: 2026-10-09. Installation, commissioning and daily operation.</p>
+
+<nav class="toc" aria-label="On this page"><ul>
+  <li><a href="#dwp611-milling-guide">DWP611 milling guide</a>
+  <ul>
+    <li><a href="#1-what-is-ready-and-what-is-not">1. What is ready, and what is not</a></li>
+    <li><a href="#2-parts-and-tools">2. Parts and tools</a></li>
+    <li><a href="#3-install-or-inspect-the-router">3. Install or inspect the router</a></li>
+    <li><a href="#4-install-the-18-collet-and-bit">4. Install the ⅛″ collet and bit</a></li>
+    <li><a href="#5-router-control-and-speed">5. Router control and speed</a></li>
+    <li><a href="#6-first-commissioning-power-off-at-both-tools">6. First commissioning — power off at both tools</a></li>
+    <li><a href="#7-prepare-a-job-in-fabforge">7. Prepare a job in FabForge</a></li>
+    <li><a href="#8-daily-setup-and-first-cut">8. Daily setup and first cut</a></li>
+    <li><a href="#9-tool-changes-pause-and-recovery">9. Tool changes, pause and recovery</a></li>
+    <li><a href="#10-troubleshooting-and-maintenance">10. Troubleshooting and maintenance</a></li>
+    <li><a href="#sources-and-commissioning-record">Sources and commissioning record</a></li>
+  </ul></li>
+</ul>
+</nav><h2 id="1-what-is-ready-and-what-is-not">1. What is ready, and what is not</h2>
+
+<p>The Pi workstation is at <strong>http://192.168.68.138:8000</strong>. FabForge owns the queue and machine-specific badge permissions in Graham Mackie’s workspace. The machine defaults to observer mode. A badge releases access; a job release is for setup, and <strong>Start is a separate action</strong>.</p>
+
+<p>Manual motion has been reported working. Homing, measured travel limits and the saved BitSetter routines have <strong>not been commissioned by this project</strong>. The resource remains restricted. A workspace administrator must complete and record commissioning before marking it available. Do not bypass the badge gate to make a production cut.</p>
+
+<p>Recorded settings, not a fresh reading: Grbl 1.1f; <code>$32=0</code>, <code>$30=1000</code>, <code>$31=0</code>; homing enabled; soft/hard limits disabled; travel X=845, Y=850, Z=95 mm. <strong>Y=850 is suspect for the wide, shallow XL.</strong> Measure and correct it during commissioning; do not copy an assumed XL value. Saved probing includes X−33, Y−373.5; these are unverified machine coordinates, not safe destinations.</p>
+
+<h2 id="2-parts-and-tools">2. Parts and tools</h2>
+
+<ul>
+<li>DeWalt DWP611 with its correct Shapeoko router mount, sound cord, working switch and speed dial.</li>
+<li><strong>DWP611-compatible precision ⅛″ collet</strong>, plus the nut specified by that collet manufacturer. The stock DWP611 collet is ¼″. A ⅛″ cutter cannot be secured directly in it. A 3 mm or 4 mm collet is not ⅛″ (3.175 mm).</li>
+<li>Sharp, undamaged CNC end mills with ⅛″ shanks, suitable for the material and intended operation. Cutting diameter and shank diameter are separate specifications.</li>
+<li>Correct collet wrench, clean brush/cloth, workholding, spoilboard, dust extraction, eye/hearing protection, and material-appropriate respiratory protection.</li>
+<li>Accessible router disconnect and machine stop. Test what each stop actually removes power from before use.</li>
+</ul>
+
+<p>Do not assume a generic ER collet, a Dremel accessory or an arbitrary reducer sleeve fits the DWP611. Buy by explicit router compatibility. Availability at Amazon/Home Depot varies; this guide does not claim local stock. Prefer the collet maker’s exact listing and instructions.</p>
+
+<h2 id="3-install-or-inspect-the-router">3. Install or inspect the router</h2>
+
+<ol>
+<li>Put the router switch <strong>OFF and unplug it</strong>. Disable the laser supply and remove the laser head/cables from the work envelope as its instructions require. Allow the cutter to stop completely before handling.</li>
+<li>Inspect the mount and router motor housing. Use the Shapeoko mount intended for the DWP611; do not improvise shims or clamp on plastic, vents or the collet area. The handheld base is not used as the CNC mount.</li>
+<li>Support the motor while positioning it. Set its height so the tool can reach the stock and BitSetter without exhausting Z travel, and so the body, collet, dust shoe and retained laser mount clear fixtures throughout the envelope. Use the mount manufacturer’s fastening sequence/torque; this guide does not invent one.</li>
+<li>Route the power cord and extraction hose with strain relief and full X/Y/Z travel allowance. Keep them away from the cutter and belts. Keep motor power wiring separated from probe/signal wiring where practical.</li>
+<li>With power isolated, check the mount cannot slip. After motion commissioning, verify the travel envelope with the router off before installing valuable stock.</li>
+</ol>
+
+<h2 id="4-install-the-18-collet-and-bit">4. Install the ⅛″ collet and bit</h2>
+
+<ol>
+<li>Unplug the router; a software stop or M5 is not isolation. Let the bit stop and cool. Keep gloves away from a running spindle.</li>
+<li>Remove the old cutter using the spindle lock <strong>only while stopped</strong>, and the correct wrench. Follow the replacement collet’s instructions for separating/assembling the collet and nut; collet/nut designs differ. Some self-releasing assemblies require continued loosening past initial resistance.</li>
+<li>Clean the spindle taper, collet slots, nut and bit shank. Do not lubricate the gripping surfaces or trap chips in the taper. Replace damaged parts rather than tightening harder.</li>
+<li>Fit the approved ⅛″ collet/nut. Insert only the smooth round shank, never the flutes or transition radius. Use the tool/collet maker’s minimum engagement and shortest practical stick-out.</li>
+<li>DeWalt’s stock assembly procedure says insert fully, then withdraw about <strong>1/16″ (1.6 mm)</strong> before tightening. For an aftermarket ⅛″ collet, follow its instructions if they differ. Do not bottom the shank, clamp the flutes or use a tool too short to engage properly.</li>
+<li>Hold the spindle lock and tighten with the correct wrench to the collet maker’s instructions. <strong>Never tighten an empty collet.</strong> Do not use pliers, impact tools or an invented torque value.</li>
+<li>Remove the wrench, release the spindle lock and check clearance by hand with power disconnected. If the cutter is visibly eccentric, loose or damaged, stop and correct it.</li>
+<li>Every changed cutter changes tool length. Re-establish or compensate the tool reference before cutting; fitting a bit is not the same as setting Z zero.</li>
+</ol>
+
+<h2 id="5-router-control-and-speed">5. Router control and speed</h2>
+
+<p><strong>The DWP611 is manually controlled.</strong> CNCjs Start starts the G-code program; it does not currently switch on this router. M3, M5 and an S word do not set its physical RPM or remove its mains power. Feed hold pauses motion and is not an emergency stop; the router may keep spinning.</p>
+
+<p>DeWalt lists these approximate no-load dial speeds:</p>
+
+<table>
+<thead>
+<tr>
+  <th>Dial</th>
+  <th>Approximate RPM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>1</td>
+  <td>16,000</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td>18,200</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td>20,400</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td>22,600</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td>24,800</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td>27,000</td>
+</tr>
+</tbody>
+</table>
+
+<p>Choose RPM, feed, depth and stepover using the <strong>actual cutter maker’s data</strong>, material and machine capability. Small shanks do not imply one universal feed. A useful relationship is feed (mm/min) = RPM × flute count × chip load (mm/tooth); it is not a recommendation without the other inputs. The DWP611 cannot run at a CAM-requested 8,000 RPM merely because the file contains S8000.</p>
+
+<p>For future automatic on/off, use an enclosed, appropriately certified mains switching product rated for this router’s motor load and inrush, with compatible isolated control input and a verified stop strategy. A generic exposed relay board is not a complete installation. Have mains wiring done by a qualified person. The router’s dial still sets RPM. Keep laser control separate; a shared PWM/spindle signal must not unintentionally energize both tools.</p>
+
+<h2 id="6-first-commissioning-power-off-at-both-tools">6. First commissioning — power off at both tools</h2>
+
+<p>A qualified operator must be physically present, with a clear machine and immediate access to a physical stop. Do not run a downloaded “test cut” as a substitute for this sequence.</p>
+
+<ol>
+<li>Save a controller settings/offset snapshot and the exact saved macros. Identify the actual controller revision and installed Z assembly. Confirm each axis moves in the intended direction using small increments only after the control system is ready.</li>
+<li>Verify the homing switches and their reported states before homing. Check travel, clamp, hose and mount clearance. Perform supervised homing, ready to stop if a switch fails. Homing moves the machine; it is not a read-only test.</li>
+<li>Measure usable X/Y/Z travel and resolve the suspect Y setting. Verify limit behavior before enabling or relying on soft limits. Do not infer travel from the size of the spoilboard.</li>
+<li>Verify the BitSetter input changes when actuated, with the router off and no commanded probe motion. Check its physical mounting, surface cleanliness and access path.</li>
+<li>Review <strong>Initial Tool Set</strong> and <strong>New Tool Set</strong> completely, including G53 machine-coordinate moves, probe directions/distances/feeds, safe heights and how offsets are saved/applied. Confirm that X−33/Y−373.5 and every other saved coordinate match this machine. Do not execute merely because a macro has the expected name.</li>
+<li>Commission the initial probe with a suitable installed tool, checking its approach and actual trigger/retract. Compare the resulting reference against an independently checked surface. A “macro submitted” message is not confirmation of a successful probe.</li>
+<li>Test a subsequent tool change and recheck a known height. Document what resets invalidate the reference. Only then approve the routine for operators.</li>
+</ol>
+
+<p><strong>BitSetter is a tool-length reference, not a stock-origin finder.</strong> Homing establishes machine coordinates; work zero establishes the job’s coordinate system. A successful BitSetter cycle does not set stock X/Y/Z for you. A reset, reconnect, moved router body, missed steps or changed setup can invalidate assumptions.</p>
+
+<h2 id="7-prepare-a-job-in-fabforge">7. Prepare a job in FabForge</h2>
+
+<ol>
+<li>Create/select the work order in <strong>Graham Mackie’s workspace</strong> and associate the correct Shapeoko resource, setup sheet and G-code artifact.</li>
+<li>CAM for a Grbl-compatible 3-axis mill. Verify units, work coordinate system (normally G54), stock size/origin, cutter, RPM, feed, stepdown, stepover, safe Z and clamp clearance. Do not assume canned cycles, automatic tool changes or M6 are supported.</li>
+<li>For initial operation, export <strong>one tool per file</strong>. Only use multi-tool programs after the pause/change/reference/resume path has been specifically validated.</li>
+<li>In CNCjs <strong>Work queue</strong>, review the production packet, exact G-code file, toolpath and simulation. Confirm the simulation’s limits: it does not prove fixture clearance, router speed, actual tool length or material suitability.</li>
+<li>Badge in with an enrolled, unexpired machine-authorized badge. If the machine is restricted or the badge is denied, resolve the reason in FabForge; do not disable access enforcement.</li>
+<li>Release the exact file for setup. If the file changes, review and release the new content. Load the released file using the workstation flow. Release/load does not start motion.</li>
+</ol>
+
+<h2 id="8-daily-setup-and-first-cut">8. Daily setup and first cut</h2>
+
+<ol>
+<li>Remove/disable the laser, fit the correct milling tool with router unplugged, and clear the bed. Inspect mount, collet, workholding and BitSetter.</li>
+<li>Connect from <strong>Machine controls</strong> only when ready for a possible controller reset. Confirm the correct Grbl port and 115200 baud. Have only one sender attached.</li>
+<li>Home using the commissioned procedure. Confirm milling mode <strong>$32=0</strong> through the approved maintenance/setup procedure; selecting the Milling page does not set it.</li>
+<li>Establish the initial BitSetter reference using the commissioned macro. In Machine controls choose <strong>Read saved macros</strong>, select the correct routine, review it and acknowledge only after physical checks.</li>
+<li>Secure stock without putting clamps/screws in any cutting or travel path. Set the stock work origin matching CAM. Set Z using the validated method; do not treat BitSetter as the stock touch plate.</li>
+<li>Review/release/load the job. Verify coordinates, units and initial moves. Do a planned air run with router power isolated and a deliberately verified clearance setup if required; never assume all rapids follow the stock surface or casually change Z and forget to restore it.</li>
+<li>Remove wrenches and loose items. Start extraction. Close guards as applicable. Set the dial, switch the router on manually, let it reach speed and listen for abnormal vibration. Stop immediately if the bit/mount is not running true.</li>
+<li>With an operator at the machine, press <strong>Start</strong> separately. Watch the approach and first cut. Stay present for the entire operation; the webcam is supplemental observation.</li>
+<li>At completion, wait for motion to stop, switch the router off manually, wait for the cutter to stop, and unplug before touching the tool/stock. Secure or remove the part without moving a live cutter.</li>
+<li>Submit the actual production outcome and quantity in the released job’s report flow; do not report a successful part just because streaming ended. Badge out when finished.</li>
+</ol>
+
+<h2 id="9-tool-changes-pause-and-recovery">9. Tool changes, pause and recovery</h2>
+
+<ul>
+<li>Use separate-tool jobs initially. Finish/stop the first operation, preserve the validated coordinate setup, switch off/unplug the router, fit the next tool and run <strong>New Tool Set</strong> only while its initial reference is still valid. Verify the compensated height before the next file. Do not independently overwrite Z and also apply compensation unless the validated procedure requires it.</li>
+<li>Do not run the idle-only tool macros into an arbitrary paused program. A paused tool change needs a tested sender/macro procedure; otherwise use separate files.</li>
+<li>Feed hold is for a controlled motion pause. Attend to a spinning router near stationary stock immediately. If there is a crash, loose stock, broken tool, smoke or unexpected motion, use the physical stop/disconnect appropriate to the hazard.</li>
+<li>After a reset, power loss or suspected lost position, do not simply Resume. Re-establish homing, work offsets and tool reference, inspect the work, and choose an intentionally prepared recovery toolpath.</li>
+</ul>
+
+<h2 id="10-troubleshooting-and-maintenance">10. Troubleshooting and maintenance</h2>
+
+<table>
+<thead>
+<tr>
+  <th>Symptom</th>
+  <th>Check / response</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Job moves, router is off</td>
+  <td>Stop motion. Router is manual; do not start it with the cutter buried in stock. Recover to a verified safe position before restarting.</td>
+</tr>
+<tr>
+  <td>Bit slips or cut depth changes</td>
+  <td>Stop, unplug, inspect collet compatibility, engagement, contamination, nut and router mount. Re-establish tool reference.</td>
+</tr>
+<tr>
+  <td>Burning, chatter, melting or poor finish</td>
+  <td>Stop and review tool sharpness, runout, stick-out, chip evacuation and validated feed/RPM/cut engagement. Do not blindly turn up speed.</td>
+</tr>
+<tr>
+  <td>Probe fails or reaches an unexpected location</td>
+  <td>Stop immediately; retain the error. Check input polarity/state, macro coordinates and clearance with outputs isolated. Do not repeat the same failed move.</td>
+</tr>
+<tr>
+  <td>Alarm or controls locked</td>
+  <td>Read the controller/access reason. Do not unlock around an unresolved homing, limit or authorization problem.</td>
+</tr>
+<tr>
+  <td>Z is wrong after a tool change</td>
+  <td>Treat the tool reference as invalid. Check both work offsets and compensation; re-establish them before cutting.</td>
+</tr>
+</tbody>
+</table>
+
+<p>After each job, unplug and clean chips from the collet, router vents and BitSetter without forcing debris into bearings. Check cords, mount fasteners, belts and extraction. Follow DeWalt’s brush/service schedule and use qualified repair for electrical faults. Log tool, material, feed/RPM and outcome in the setup/production record for repeatable jobs.</p>
+
+<h2 id="sources-and-commissioning-record">Sources and commissioning record</h2>
+
+<ul>
+<li><a href="https://www.dewalt.com/en-us/product/dwp611/1-14-hp-max-torque-variable-speed-compact-router">DeWalt DWP611 product/support page</a>: stock ¼″ collet and specifications.</li>
+<li><a href="https://assets.dewalt.com/GLOBALBOM/QU/DWP611/1/Instruction_Manual/EN/N336740_DWP611.pdf">DeWalt Type 1 instruction manual N336740</a>: bit installation, 1/16″ withdrawal, spindle lock, no empty-collet tightening and dial/RPM chart. Match your nameplate/type before use.</li>
+<li><a href="https://github.com/gnea/grbl/blob/master/doc/markdown/laser_mode.md">Grbl 1.1 laser-mode documentation</a>: restore $32=0 for milling.</li>
+<li>Companion guide: <a href="jtech-7w.html">J Tech 7W installation and use</a>.</li>
+</ul>
+
+<p>Record before production: operator/date; router type; collet maker/part; tool engagement requirements; measured travel; homing test; probe-input test; reviewed macro versions/coordinates; initial and changed-tool height checks; physical stop behavior; first-cut setup and result. Store this evidence in FabForge, then have an administrator assess resource availability.</p>
+</main></body></html>

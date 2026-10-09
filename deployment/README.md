@@ -219,3 +219,14 @@ Credentials live in a private environment file loaded by a systemd drop-in.
 Rollback archive: `/home/pi/cncjs-upgrade/pre-fabforge.tgz`. Restore it into the
 application's `dist/cncjs` directory with CNCjs stopped and remove the FabForge
 systemd drop-in, then reload systemd/start CNCjs. Do this only with an idle machine.
+
+## Operator handbooks
+
+- [DWP611: installation, ⅛-inch tooling, BitSetter, milling and recovery](guides/dwp611.md)
+- [J Tech 7W: identification, installation, commissioning and engraving](guides/jtech-7w.md)
+
+Printable HTML copies are shipped in `src/app/assets/guides/` and linked from the
+Milling and Laser pages. To regenerate after editing Markdown, run
+`python3 deployment/guides/render.py` (requires `markdown2`). The generated files
+are checked in; the Pi requires no Markdown renderer or network access to read them.
+Exact laser pinout/focus remain conditional on identifying the installed hardware.

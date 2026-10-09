@@ -380,6 +380,11 @@ export default class Shapeoko extends PureComponent {
                     {[['$30', 'Maximum power scale'], ['$31', 'Minimum power scale'], ['$32', 'Laser mode · 1 = enabled']].map(([key, label]) => <div key={key}><span>{label}</span><strong>{connected ? get(machine, ['controller', 'settings', 'settings', key], '—') : '—'}</strong><small>Reported {key} · read only</small></div>)}
                   </div>
 )}
+                  <p className={styles.actions}>
+                    <a className={styles.guideLink} href={`assets/guides/${laser ? 'jtech-7w' : 'dwp611'}.html`} target="_blank" rel="noopener noreferrer">
+                      Read the full installation &amp; operating guide ↗
+                    </a>
+                  </p>
                   <div className={styles.workflowNote}>
                     <strong>
                       {laser
