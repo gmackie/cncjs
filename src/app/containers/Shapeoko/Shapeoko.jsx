@@ -9,6 +9,7 @@ import MachineDrawing from './MachineDrawing';
 import MachineControls from './MachineControls';
 import Usage from './Usage';
 import ProbeSetup from './ProbeSetup';
+import Commissioning from './Commissioning';
 import CameraMonitor from './CameraMonitor';
 import styles from './index.styl';
 
@@ -19,7 +20,8 @@ const pages = [
   ['/laser', '04', 'J Tech engraving'],
   ['/workspace', '05', 'Machine controls'],
   ['/setup', '06', 'Probes & setup'],
-  ['/usage', '07', 'Operator usage'],
+  ['/commissioning', '07', 'Commissioning'],
+  ['/usage', '08', 'Operator usage'],
 ];
 export default class Shapeoko extends PureComponent {
   static propTypes = {
@@ -116,10 +118,11 @@ export default class Shapeoko extends PureComponent {
     const controls = pathname === '/workspace';
     const usage = pathname === '/usage';
     const setup = pathname === '/setup';
+    const commissioning = pathname === '/commissioning';
     const active = orders.filter(
       (order) => !['complete', 'cancelled'].includes(order.status)
     );
-    const title = { '/setup': 'Probes & setup', '/usage': 'Operator usage', '/fabforge': 'Work queue', '/workspace': 'Machine controls', '/laser': 'Laser engraving', '/milling': 'Router milling' }[pathname] || 'Machine overview';
+    const title = { '/commissioning': 'Machine commissioning', '/setup': 'Probes & setup', '/usage': 'Operator usage', '/fabforge': 'Work queue', '/workspace': 'Machine controls', '/laser': 'Laser engraving', '/milling': 'Router milling' }[pathname] || 'Machine overview';
     const eyebrow = { '/laser': 'J TECH PHOTONICS / 7W DIODE', '/milling': 'DEWALT DWP611 / ⅛″ TOOLING', '/fabforge': 'FABFORGE / PRODUCTION' }[pathname] || 'SHAPEOKO 3 XL / MACHINE 01';
     const units = Number(get(machine, 'controller.settings.settings.$13')) === 1 ? 'in' : 'mm';
     return (
@@ -180,7 +183,7 @@ export default class Shapeoko extends PureComponent {
               <br />
               Carbide BitSetter
             </p>
-            <span className={styles.restricted}>Commissioning pending</span>
+            <Link to="/commissioning" className={styles.restricted}>Commissioning pending ↗</Link>
           </div>
           <a
             className={styles.fabLink}
@@ -246,13 +249,19 @@ export default class Shapeoko extends PureComponent {
             />
           )}
           {usage && <Usage />}
+          {commissioning && (
+            <Commissioning
+              machine={machines.length === 1 ? machine : null} fresh={fresh}
+              canOperate={canOperate} access={access}
+            />
+          )}
           {setup && (
           <ProbeSetup
             machine={machines.length === 1 ? machine : null} fresh={fresh} canOperate={canOperate}
             access={access}
           />
 )}
-          {!queue && !controls && !usage && !setup && (
+          {!queue && !controls && !usage && !setup && !commissioning && (
             <div>
               <div className={styles.heroGrid}>
                 <section className={styles.machineCard}>
@@ -363,7 +372,7 @@ export default class Shapeoko extends PureComponent {
                           [
                             '02',
                             'Establish the reference',
-                            'After homing is commissioned, verify the BitSetter location and clearance in Probes & setup. The legacy macros require replacement.',
+                            'After homing is commissioned, verify the BitSetter location and clearance on the Commissioning page. The legacy macros require replacement.',
                           ],
                           [
                             '03',
@@ -464,7 +473,7 @@ export default class Shapeoko extends PureComponent {
                       and laser installation are still pending.
                     </p>
                     <div>
-                      <Link to="/setup">BitZero & BitSetter setup ↗</Link>
+                      <Link to="/commissioning">Commission machine ↗</Link>
                       <Link to="/laser">Laser setup ↗</Link>
                     </div>
                   </section>

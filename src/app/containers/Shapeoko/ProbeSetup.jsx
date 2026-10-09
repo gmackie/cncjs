@@ -1,15 +1,15 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import get from 'lodash/get';
+import { Link } from 'react-router-dom';
 import CameraMonitor from './CameraMonitor';
 import MachineControls from './MachineControls';
 import { probeTelemetry } from './probe-telemetry';
 import styles from './index.styl';
 
-const steps = [
+const dailySteps = [
   ['Prepare the tool', 'Unplug the DWP611 and disable laser power. Fit your intact, conductive flat-end cutter in a DWP611-compatible ⅛″ precision collet. Never use the stock ¼″ collet for a ⅛″ shank. BitSetter measures the cutter directly; a smooth pin is preferred for BitZero X/Y because flutes can reduce repeatability.'],
   ['Check both probe inputs', 'Connect only when you are at the machine and ready for a possible controller reset. With axes stationary, attach the BitZero magnet to the collet nut. Carefully touch its body to the conductive cutter, keeping fingers clear of sharp edges. Check inactive → contact → inactive below. Park BitZero clear, then depress and release BitSetter independently. Both share one input; the UI cannot identify which accessory triggered it.'],
-  ['Commission homing & clearance', 'Supervised homing and measured travel come before automatic probing. The saved Y travel of 850 mm is unverified for this XL. Measure the BitSetter button center, approach height, safe route and bounded search distance. Do not treat historical coordinates as calibrated positions.'],
   ['Locate the stock with BitZero V2', 'Secure stock and match the CAM origin. For lower-left XYZ, seat the locating edges over the stock corner and begin just inside the circular bore. For Z-only, rest the probe on the stock surface and start above its top. These use different offsets. A reviewed V2-specific routine is still required; the buttons below do not run one.'],
   ['Preserve the tool reference', 'Measure the first tool with a commissioned BitSetter routine, then establish stock zero using that same tool. After a tool change, measure the new cutter and apply its length difference once using a validated offset convention. Reset, lost homing, a moved router or missed steps invalidates the reference.'],
   ['Verify before cutting', 'Check the resulting stock datum independently with router power off. Test repeatability with the same tool and after a tool change. Remove BitZero and its grounding lead from the work envelope. Set router speed and power manually when ready; release the reviewed job in the queue, then Start separately.'],
@@ -26,6 +26,7 @@ export default class ProbeSetup extends PureComponent {
     fresh: PropTypes.bool,
     canOperate: PropTypes.bool,
     access: PropTypes.object,
+    workflow: PropTypes.object,
   };
   state = { step: 0, guide: 'bitzero-bitsetter', tick: Date.now() };
   componentDidMount() {
@@ -43,6 +44,8 @@ export default class ProbeSetup extends PureComponent {
   render() {
     const { machine, fresh, canOperate, access } = this.props;
     const { step, guide, tick } = this.state;
+    const { workflow } = this.props;
+    const steps = workflow ? workflow.steps : dailySteps;
     const telemetry = probeTelemetry(machine, fresh, Math.max(0, tick - (this.receivedAt || tick)));
     const probeLabel = telemetry.contact ? 'P · contact detected' : 'No P · inactive';
     const status = get(machine, 'controller.state.status', {});
@@ -50,14 +53,15 @@ export default class ProbeSetup extends PureComponent {
     return (
       <div>
         <div className={styles.workflowNote}>
-          <strong>Physical commissioning pending</strong>
-          <span>Read the instructions and inspect the signals here. Automatic V2 probing and tool compensation are unavailable until their routines and geometry are validated. Reading a step does not certify setup.</span>
+          <strong>{workflow ? 'Machine commissioning · not yet verified' : 'Automatic probing awaits commissioning'}</strong>
+          <span>{workflow ? 'Complete these supervised checks before making the machine available for production. Reading a step does not certify hardware or unlock controls.' : 'Use this page for daily tooling, stock setup and operator instructions. First-use validation is on the dedicated commissioning page.'}</span>
+          <Link to={workflow ? '/setup' : '/commissioning'}>{workflow ? 'Open daily probe setup ↗' : 'Open machine commissioning ↗'}</Link>
         </div>
         <div className={styles.setupGrid}>
-          <section className={styles.panel} aria-label="Guided probe setup">
-            <span className={styles.eyebrow}>BITZERO V2 + BITSETTER / ⅛″ CUTTER</span>
-            <h2>Set up, check, then measure</h2>
-            <nav className={styles.setupSteps} aria-label="Setup instructions">
+          <section className={styles.panel} aria-label={workflow ? 'Machine commissioning procedure' : 'Guided probe setup'}>
+            <span className={styles.eyebrow}>{workflow ? 'SHAPEOKO / DWP611 / J TECH / CAMERA' : 'BITZERO V2 + BITSETTER / ⅛″ CUTTER'}</span>
+            <h2>{workflow ? workflow.title : 'Daily probe & stock setup'}</h2>
+            <nav className={styles.setupSteps} aria-label={workflow ? 'Commissioning instructions' : 'Setup instructions'}>
               {steps.map(([title], index) => (
                 <button
                   type="button" key={title} aria-current={step === index ? 'step' : undefined}
