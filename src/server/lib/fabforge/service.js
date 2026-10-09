@@ -46,7 +46,7 @@ export const createService = (remote = request, config = configuration) => {
   const review = async (id, jobId, source) => {
     const { job, workOrder } = await jobDetail(id, jobId);
     const target = sourcePath(source);
-    const gcode = await remote(target.path, { raw: true, query: target.query });
+    const gcode = await remote(target.path, { raw: true, query: { ...target.query, workOrderId: id, jobId } });
     const hash = crypto.createHash('sha256').update(gcode).digest('hex');
     const analysis = await simulate(gcode);
     return { job, workOrder, source, hash, gcode, analysis };

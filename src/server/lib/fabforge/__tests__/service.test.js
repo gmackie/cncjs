@@ -36,7 +36,7 @@ test('uses FabForge list/detail/raw contracts and leaves unrelated jobs out', as
   const result = await service.review('w1', 'j1', source);
   expect(result.hash).toBe(hash);
   expect(result.analysis.complete).toBe(true);
-  expect(remote).toHaveBeenCalledWith('artifacts/a1', { raw: true, query: undefined });
+  expect(remote).toHaveBeenCalledWith('artifacts/a1', { raw: true, query: { workOrderId: 'w1', jobId: 'j1' } });
   expect(remote.mock.calls.every(([, options]) => !options || !options.method)).toBe(true);
 });
 test('records hash-bound offline evidence without passing a physical gate', async () => {

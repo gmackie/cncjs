@@ -59,8 +59,12 @@ commissioning; nothing auto-starts or marks production complete.
 Create `/home/pi/cncjs-upgrade/fabforge.env` from `fabforge.env.example`, mode 600,
 owned by pi. Set URL, actual workspace UUID and a dedicated token with `read,write`
 scopes. `read` permits queue/artifact inspection; `write` permits reviews and
-queue disposition. Optional `FABFORGE_RESOURCE_ID` requires a matching assignment
-for review or mutation; empty means CNC/laser jobs throughout that workspace.
+queue disposition. `FABFORGE_RESOURCE_ID` is required for queue, badge-policy and source access.
+FabForge must enroll the token's immutable ID in that resource's policy:
+`cncjsIntegration: { version: 1, enabled: true, tokenId: "…" }`.
+The token needs explicit `read,write` scopes. No token secret belongs in policy.
+Enrollment permits only assigned CNC/laser jobs; global order notes, source files,
+and unrelated jobs are excluded. Use job-specific setup sheets for shared files.
 
 Install a systemd drop-in:
 
@@ -222,3 +226,19 @@ Deploy only the compiled `server/lib/fabforge/machine-monitor.js` and updated
 files and the private environment first; check the authenticated controller list
 and access status before restarting while idle. Roll back the files/environment
 and restart while idle. There is no new database migration.
+
+## Machine-scoped queue API (GMA-755 / GMA-751)
+
+The bridge routes queue/detail/review/report requests through
+`/api/fabrication/v0/resources/{resourceId}/cncjs/…`. Resource lookup returns only
+the enrolled machine's badge policy. File requests carry `workOrderId` and `jobId`;
+the file must appear in that job's source reference or a job-specific setup sheet.
+A previous review does not grant access to a new file. Repository files still
+require an exact commit SHA and a workspace-bound repository.
+
+Deploy the FabForge endpoint and enroll the existing token before installing this
+CNCjs client. Revoking the token, disabling enrollment, changing assignment, or
+removing a source reference takes effect on the next request. There is no fallback
+to the old workspace-wide API when authorization fails. Monitoring and usage keep
+their existing resource-specific contracts. Enrollment does not enroll an operator
+badge, make the resource available, or start a job.

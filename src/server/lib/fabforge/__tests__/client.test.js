@@ -30,6 +30,7 @@ beforeEach(() => {
   process.env.FABFORGE_URL = origin;
   process.env.FABFORGE_WORKSPACE_ID = 'shop';
   process.env.FABFORGE_TOKEN = 'test-token';
+  process.env.FABFORGE_RESOURCE_ID = 'shapeoko';
   respond = (req, res) => res.end(JSON.stringify({ data: { workOrders: [] } }));
 });
 afterAll(async () => {
@@ -40,7 +41,7 @@ afterAll(async () => {
 });
 test('sends server credential and workspace using the real HTTP contract', async () => {
   expect(await request('work-orders')).toEqual({ workOrders: [] });
-  expect(seen).toMatchObject({ url: '/api/fabrication/v0/work-orders?workspaceId=shop', token: 'Bearer test-token' });
+  expect(seen).toMatchObject({ url: '/api/fabrication/v0/resources/shapeoko/cncjs/work-orders?workspaceId=shop', token: 'Bearer test-token' });
   await request('work-orders/w1/validations', { method: 'POST', body: { workspaceId: 'other', status: 'warning' } });
   expect(JSON.parse(seen.body)).toEqual({ workspaceId: 'shop', status: 'warning' });
 });
@@ -73,5 +74,18 @@ test('rejects unconfigured and credential-bearing base URLs', async () => {
   await expect(request('work-orders')).rejects.toThrow('Configure');
   process.env.FABFORGE_TOKEN = 'test';
   process.env.FABFORGE_URL = 'http://user:pass@localhost';
+  await expect(request('work-orders')).rejects.toThrow('Invalid FabForge');
+});
+
+test('scopes queue, resources and sources to enrollment without changing telemetry routes', async () => {
+  for (const path of ['resources', 'work-orders/w1', 'artifacts/a1', 'repos/o/r/raw/part.nc']) {
+    // Each assertion inspects the last HTTP request, so these must be sequential.
+    // eslint-disable-next-line no-await-in-loop
+    await request(path);
+    expect(seen.url).toBe(`/api/fabrication/v0/resources/shapeoko/cncjs/${path}?workspaceId=shop`);
+  }
+  await request('resources/shapeoko/monitor');
+  expect(seen.url).toBe('/api/fabrication/v0/resources/shapeoko/monitor?workspaceId=shop');
+  delete process.env.FABFORGE_RESOURCE_ID;
   await expect(request('work-orders')).rejects.toThrow('Invalid FabForge');
 });

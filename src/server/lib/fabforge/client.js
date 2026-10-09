@@ -53,7 +53,14 @@ export const request = (path, { method = 'GET', body, query = {}, raw = false } 
       ) {
         throw new Error('Expected an HTTP(S) origin without credentials or a path.');
       }
-      url = new URL(`/api/fabrication/v0/${path}`, base);
+      // Queue and file access use the enrolled machine boundary. Monitoring and
+      // usage already have resource-specific endpoints and retain their contract.
+      const scoped = /^(work-orders(?:\/|$)|resources$|artifacts\/|repos\/)/.test(path);
+      if (scoped && !config.resourceId) {
+        throw new Error('Machine resource enrollment is required.');
+      }
+      const apiPath = scoped ? `resources/${segment(config.resourceId)}/cncjs/${path}` : path;
+      url = new URL(`/api/fabrication/v0/${apiPath}`, base);
       if (url.origin !== base.origin || !url.pathname.startsWith('/api/fabrication/v0/')) {
         throw new Error('Invalid API path.');
       }

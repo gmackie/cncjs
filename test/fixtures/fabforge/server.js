@@ -1,5 +1,5 @@
 // Local FabForge contract fixture. No machine connection and no production writes.
-// FABFORGE_URL=http://127.0.0.1:8010 FABFORGE_WORKSPACE_ID=fixture FABFORGE_TOKEN=fixture-only
+// FABFORGE_RESOURCE_ID=fixture-machine FABFORGE_URL=http://127.0.0.1:8010 FABFORGE_WORKSPACE_ID=fixture FABFORGE_TOKEN=fixture-only
 const http = require('http');
 const crypto = require('crypto');
 const fs = require('fs');
@@ -12,7 +12,7 @@ const usageEvents = new Map();
 http.createServer((req, res) => {
   if (req.headers.authorization !== 'Bearer fixture-only') { res.writeHead(401); res.end(); return; }
   const url = new URL(req.url, 'http://localhost');
-  const route = url.pathname.replace('/api/fabrication/v0/', '');
+  const route = url.pathname.replace('/api/fabrication/v0/', '').replace(/^resources\/fixture-machine\/cncjs\//, '');
   const chunks = [];
   req.on('data', c => chunks.push(c));
   req.on('end', () => {
