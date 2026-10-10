@@ -76,10 +76,45 @@ export default class CommissioningControls extends PureComponent {
     const recent = fresh && Number.isFinite(machine && machine.statusAgeMs) && machine.statusAgeMs <= 1500;
     const idle = active && recent && connected && report.activeState === 'Idle' && !setup.pending && !busy;
     const jog = idle && setup.homed;
+    let probeLabel = 'Unknown';
+    if (recent && typeof report.pinState === 'string') {
+ probeLabel = report.pinState.includes('P') ? 'Contact' : 'Clear';
+}
+    const nextStep = [
+      [!access.authorized, 'Badge in to begin supervised setup.'],
+      [!access.commissioningAllowed, 'This badge needs commissioning permission.'],
+      [!ready, 'Confirm physical readiness below.'],
+      [!active, 'Begin a setup session to unlock connection.'],
+      [!connected, 'Connect Shapeoko, then home the machine.'],
+      [!recent, 'Waiting for a fresh controller report.'],
+      [!!setup.pending, `Waiting for ${setup.pending} to finish.`],
+      [!setup.homed, 'Home the machine to establish its position.'],
+      [report.activeState !== 'Idle', 'Wait for the machine to return to Idle.'],
+    ].find(([blocked]) => blocked);
+    const directionButton = (axis, sign, label) => (
+      <button
+        type="button" className={styles[`jog${axis}${sign > 0 ? 'Plus' : 'Minus'}`]}
+        disabled={!jog || !ready} aria-label={`${label}, ${axis === 'Z' ? Math.min(step, 1) : step} millimeters`}
+        onClick={() => this.act({ action: 'jog', axis, distance: sign * (axis === 'Z' ? Math.min(step, 1) : step), feed: axis === 'Z' ? 100 : feed })}
+      >{label}<small>{axis === 'Z' ? Math.min(step, 1) : step} mm</small>
+      </button>
+    );
     return (
       <section className={styles.panel} aria-label="Supervised commissioning controls">
         <span className={styles.eyebrow}>AT THE MACHINE · SETUP ONLY</span>
         <h2>Position over BitSetter</h2>
+        <div className={styles.commissionStatus} role="status">
+          <strong>{nextStep ? nextStep[1] : 'Ready to jog · one click, one move'}</strong>
+          <span>{connected ? report.activeState : 'Disconnected'} · {active ? 'Setup session active' : 'Controls locked'}</span>
+        </div>
+        <div className={styles.jogReadout} aria-label="Machine position and probe">
+          {['x', 'y', 'z'].map(axis => {
+            const value = get(report, ['mpos', axis]);
+            const valid = recent && value !== undefined && value !== null && value !== '' && Number.isFinite(Number(value));
+            return <div key={axis}><span>Machine {axis.toUpperCase()}</span><strong>{valid ? Number(value).toFixed(3) : '—'}</strong><small>mm</small></div>;
+          })}
+          <div><span>Probe input</span><strong>{probeLabel}</strong><small>BitZero / BitSetter</small></div>
+        </div>
         <p>BitSetter is at the front-left. Jog one axis at a time, align the cutter over the button, then capture its position. Capturing records a candidate only; it does not probe, set zero, or enable an automatic routine.</p>
         {!access.authorized && <p>Use <strong>Badge in</strong> above and type your enrolled temporary code. The RFID reader is not required.</p>}
         {access.authorized && !access.commissioningAllowed && <p>This badge does not have commissioning permission for this machine.</p>}
@@ -114,18 +149,40 @@ export default class CommissioningControls extends PureComponent {
         {active && <p>Setup ends {new Date(access.commissioningUntil).toLocaleTimeString()}. Job Start, raw commands, macros, zero-setting and laser output remain locked.</p>}
         <p>Connection can reset Grbl. Home after connecting. Cancel jog does not stop homing; use the physical stop if needed. Camera and feed hold are not emergency stops.</p>
         {confirmHome && <div role="alert"><p>Home moves Z, then X/Y to their switches. Confirm the entire homing path is clear.</p><button type="button" disabled={busy || !active || !ready} onClick={() => this.act({ action: 'home', ready: true })}>Confirm · home machine</button><button type="button" onClick={() => this.setState({ confirmHome: false })}>Back</button></div>}
-        <div className={styles.actions}>
-          <label>XY step <select value={step} onChange={e => this.setState({ step: Number(e.target.value) })}>{[0.1, 1, 10, 25, 50, 100].map(n => <option key={n} value={n}>{n} mm</option>)}</select></label>
-          <label>XY feed <select value={feed} onChange={e => this.setState({ feed: Number(e.target.value) })}>{[100, 300, 600].map(n => <option key={n} value={n}>{n} mm/min</option>)}</select></label>
-        </div>
-        <div className={styles.actions}>
-          {[['X', -1, '← Left'], ['X', 1, 'Right →'], ['Y', -1, 'Front ↓'], ['Y', 1, 'Rear ↑'], ['Z', 1, 'Z up'], ['Z', -1, 'Z down']].map(([axis, sign, label]) => (
-            <button
-              type="button" key={axis + sign} disabled={!jog || !ready}
-              onClick={() => this.act({ action: 'jog', axis, distance: sign * (axis === 'Z' ? Math.min(step, 1) : step), feed: axis === 'Z' ? 100 : feed })}
-            >{label} · {axis === 'Z' ? Math.min(step, 1) : step} mm
-            </button>
-))}
+        <div className={styles.jogLayout}>
+          <div>
+            <fieldset className={styles.stepChoices}>
+              <legend>XY step · millimeters</legend>
+              {[0.1, 1, 10, 25, 50, 100].map(n => (
+                <button
+                  type="button" key={n} aria-pressed={step === n}
+                  onClick={() => this.setState({ step: n })}
+                >{n}
+                </button>
+              ))}
+            </fieldset>
+            <label>XY speed
+              <select value={feed} onChange={e => this.setState({ feed: Number(e.target.value) })}>
+                {[100, 300, 600].map(n => <option key={n} value={n}>{n} mm/min</option>)}
+              </select>
+            </label>
+            <p className={styles.subtle}>Each XY click moves {step} mm · about {Math.max(1, Math.round(step / feed * 60))} seconds. Use smaller steps near the button.</p>
+            <div className={styles.jogPad} aria-label="XY direction pad">
+              {directionButton('Y', 1, '↑ Rear')}
+              {directionButton('X', -1, '← Left')}
+              <span className={styles.jogCenter}>XY<small>Viewed from front</small></span>
+              {directionButton('X', 1, 'Right →')}
+              {directionButton('Y', -1, '↓ Front')}
+            </div>
+          </div>
+          <div className={styles.zJog} aria-label="Z height controls">
+            <span className={styles.eyebrow}>TOOL HEIGHT</span>
+            <h3>Z axis</h3>
+            {directionButton('Z', 1, '↑ Raise')}
+            {directionButton('Z', -1, '↓ Lower')}
+            <p>{Math.min(step, 1)} mm per click<br />100 mm/min</p>
+            <p className={styles.subtle}>Keep the cutter above the button. Position capture requires no contact.</p>
+          </div>
         </div>
         <p>{setup.pending && `Waiting for ${setup.pending} completion…`}{!setup.pending && (setup.homed ? 'Homing reference established for this connection.' : 'Home through these controls before jogging.')} Travel is not yet calibrated; stop short of physical limits.</p>
         <button type="button" disabled={!jog || !ready} onClick={() => this.act({ action: 'capture' })}>Capture BitSetter candidate position</button>

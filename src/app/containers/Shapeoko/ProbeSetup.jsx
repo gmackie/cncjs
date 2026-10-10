@@ -57,6 +57,7 @@ export default class ProbeSetup extends PureComponent {
           <span>{workflow ? 'Complete these supervised checks before making the machine available for production. Reading a step does not certify hardware or unlock controls.' : 'Use this page for daily tooling, stock setup and operator instructions. First-use validation is on the dedicated commissioning page.'}</span>
           <Link to={workflow ? '/setup' : '/commissioning'}>{workflow ? 'Open daily probe setup ↗' : 'Open machine commissioning ↗'}</Link>
         </div>
+        {workflow && <CommissioningControls machine={machine} fresh={fresh} access={access} />}
         <div className={styles.setupGrid}>
           <section className={styles.panel} aria-label={workflow ? 'Machine commissioning procedure' : 'Guided probe setup'}>
             <span className={styles.eyebrow}>{workflow ? 'SHAPEOKO / DWP611 / J TECH / CAMERA' : 'BITZERO V2 + BITSETTER / ⅛″ CUTTER'}</span>
@@ -104,7 +105,7 @@ export default class ProbeSetup extends PureComponent {
             </section>
           </div>
         </div>
-        {workflow ? <CommissioningControls machine={machine} fresh={fresh} access={access} /> : (
+        {!workflow && (
           <section className={styles.setupControls} aria-label="Setup machine controls">
             <h2>Connection & positioning</h2>
             <p>Badge authorization and machine availability are required. Connect and Home ask for confirmation; jog buttons move immediately. Zero buttons set the current position as G54 zero—they do not probe the stock.</p>

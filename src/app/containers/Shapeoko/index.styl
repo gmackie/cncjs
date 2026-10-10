@@ -797,3 +797,119 @@
     grid-row 1
     > section + section
       display none
+
+.commissionStatus
+  display flex
+  flex-wrap wrap
+  justify-content space-between
+  gap 8px
+  padding 14px 16px
+  margin 16px 0
+  background #edf1e9
+  border-left 3px solid #526b52
+  border-radius 6px
+  span
+    color #59655c
+    font-size 12px
+.jogReadout
+  display grid
+  grid-template-columns repeat(4, minmax(0, 1fr))
+  gap 10px
+  margin 18px 0
+  > div
+    padding 12px
+    border 1px solid #d8dfd1
+    border-radius 8px
+    min-width 0
+  span,small
+    display block
+    color #59655c
+    font-size 11px
+  strong
+    display block
+    margin 6px 0
+    font-size clamp(16px, 2vw, 24px)
+    font-variant-numeric tabular-nums
+.jogLayout
+  display grid
+  grid-template-columns minmax(0, 1fr) 150px
+  gap 24px
+  margin 24px 0
+.stepChoices
+  border 0
+  padding 0
+  margin 0 0 18px
+  display flex
+  flex-wrap wrap
+  gap 6px
+  legend
+    font-size 13px
+    margin-bottom 10px
+  button
+    min-width 48px
+    min-height 48px
+    font-variant-numeric tabular-nums
+  button[aria-pressed='true']
+    background #293d32
+    color white
+    border-color #293d32
+.jogPad
+  display grid
+  grid-template-columns repeat(3, minmax(0, 1fr))
+  grid-template-rows repeat(3, 76px)
+  gap 8px
+  button
+    width 100%
+    font-size 16px
+    margin 0
+  small
+    display block
+    margin-top 5px
+    font-size 11px
+.jogYPlus
+  grid-column 2
+  grid-row 1
+.jogXMinus
+  grid-column 1
+  grid-row 2
+.jogXPlus
+  grid-column 3
+  grid-row 2
+.jogYMinus
+  grid-column 2
+  grid-row 3
+.jogCenter
+  grid-column 2
+  grid-row 2
+  display flex
+  flex-direction column
+  align-items center
+  justify-content center
+  color #59655c
+  font-size 18px
+  small
+    font-size 10px
+    text-align center
+.zJog
+  padding 16px
+  border-left 1px solid #d8dfd1
+  button
+    display block
+    width 100%
+    min-height 64px
+    margin-bottom 10px
+    small
+      display block
+      font-size 11px
+      margin-top 4px
+  p
+    font-size 12px
+@media (max-width: 600px)
+  .jogReadout
+    grid-template-columns repeat(2, minmax(0, 1fr))
+  .jogLayout
+    grid-template-columns minmax(0, 1fr)
+  .zJog
+    border-left 0
+    border-top 1px solid #d8dfd1
+    padding 16px 0 0
