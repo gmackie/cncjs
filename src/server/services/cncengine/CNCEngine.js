@@ -3,6 +3,8 @@ import noop from 'lodash/noop';
 import { SerialPort } from 'serialport';
 import socketIO from 'socket.io';
 import socketioJwt from 'socketio-jwt';
+import { isKiosk, isLoopback } from '../../lib/kiosk';
+import { socketGate } from '../../lib/operator-access/gateway';
 import EventTrigger from '../../lib/EventTrigger';
 import logger from '../../lib/logger';
 import settings from '../../config/settings';
@@ -158,6 +160,9 @@ class CNCEngine {
           // User Validation
           const user = socket.decoded_token || {};
           await validateUser(user);
+          if (isKiosk(user) && !isLoopback(ipaddr)) {
+            throw new Error('Kiosk sessions are local only.');
+          }
         } catch (err) {
           log.warn(err);
           next(err);
@@ -168,6 +173,7 @@ class CNCEngine {
       });
 
       this.io.on('connection', (socket) => {
+        socketGate(socket);
         const address = socket.handshake.address;
         const user = socket.decoded_token || {};
         log.debug(`New connection from ${address}: id=${socket.id}, user.id=${user.id}, user.name=${user.name}`);

@@ -5,6 +5,7 @@ import isPlainObject from 'lodash/isPlainObject';
 import find from 'lodash/find';
 import some from 'lodash/some';
 import uuid from 'uuid';
+import { isKiosk, localKioskRequest } from '../lib/kiosk';
 import settings from '../config/settings';
 import logger from '../lib/logger';
 import config from '../services/configstore';
@@ -66,6 +67,11 @@ const getSanitizedRecords = () => {
 
 export const signin = (req, res) => {
   const { token = '', name = '', password = '' } = { ...req.body };
+  if (!name && !password && localKioskRequest(req)) {
+    res.set('Cache-Control', 'no-store');
+    res.send({ enabled: true, name: 'Shapeoko kiosk', token: generateAccessToken({ id: 'shapeoko-kiosk', name: 'Shapeoko kiosk', role: 'kiosk' }) });
+    return;
+  }
   const users = getSanitizedRecords();
   const enabledUsers = users.filter(user => {
     return user.enabled;
@@ -115,6 +121,10 @@ export const signin = (req, res) => {
       return;
     }
 
+    if (isKiosk(user)) {
+      res.status(ERR_UNAUTHORIZED).send({ msg: 'Kiosk sessions are local only.' });
+      return;
+    }
     const iat = new Date(user.iat * 1000).toISOString();
     const exp = new Date(user.exp * 1000).toISOString();
     log.debug(`jwt.verify: user.id=${user.id}, user.name=${user.name}, user.iat=${iat}, user.exp=${exp}`);

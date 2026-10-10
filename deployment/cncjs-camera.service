@@ -1,0 +1,19 @@
+[Unit]
+Description=USB camera stream for CNCjs
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+SupplementaryGroups=video
+WorkingDirectory=/home/pi/cncjs-camera
+EnvironmentFile=-/home/pi/cncjs-camera/camera.env
+ExecStart=/bin/sh /home/pi/cncjs-camera/start-camera.sh
+Restart=on-failure
+RestartSec=10
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

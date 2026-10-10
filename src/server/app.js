@@ -27,10 +27,12 @@ import {
   LanguageDetector as i18nextLanguageDetector,
   handle as i18nextHandle
 } from 'i18next-http-middleware';
+import { kioskGuard } from './lib/kiosk';
 import urljoin from './lib/urljoin';
 import logger from './lib/logger';
 import settings from './config/settings';
 import * as api from './api';
+import { installRoutes as installOperatorRoutes, httpGate } from './lib/operator-access/gateway';
 import errclient from './lib/middleware/errclient';
 import errlog from './lib/middleware/errlog';
 import errnotfound from './lib/middleware/errnotfound';
@@ -229,6 +231,7 @@ const appMain = () => {
           // User Validation
           const user = jwt.verify(token, settings.secret) || {};
           await validateUser(user);
+          req.user = user;
           bypass = true;
         } catch (err) {
           log.warn(err);
@@ -246,10 +249,15 @@ const appMain = () => {
     });
   }
 
+  app.use(urljoin(settings.route, 'api'), kioskGuard);
+
   { // Register API routes with public access
     // Also see "src/app/app.js"
     app.post(urljoin(settings.route, 'api/signin'), api.users.signin);
   }
+
+  installOperatorRoutes(app, urljoin(settings.route, 'api'));
+  app.use(urljoin(settings.route, 'api'), httpGate());
 
   { // Register API routes with authorized access
     // Version
@@ -263,6 +271,14 @@ const appMain = () => {
     // Tool Config
     app.get(urljoin(settings.route, 'api/tool'), api.tool.get);
     app.post(urljoin(settings.route, 'api/tool'), api.tool.set);
+
+    // FabForge queue and offline review. These handlers never access controllers.
+    app.get(urljoin(settings.route, 'api/fabforge/status'), api.fabforge.status);
+    app.get(urljoin(settings.route, 'api/fabforge/work-orders'), api.fabforge.queue);
+    app.get(urljoin(settings.route, 'api/fabforge/work-orders/:id'), api.fabforge.detail);
+    app.post(urljoin(settings.route, 'api/fabforge/work-orders/:id/jobs/:jobId/review'), api.fabforge.review);
+    app.post(urljoin(settings.route, 'api/fabforge/work-orders/:id/jobs/:jobId/validations'), api.fabforge.record);
+    app.post(urljoin(settings.route, 'api/fabforge/work-orders/:id/jobs/:jobId/disposition'), api.fabforge.disposition);
 
     // G-code
     app.get(urljoin(settings.route, 'api/gcode'), api.gcode.fetch);

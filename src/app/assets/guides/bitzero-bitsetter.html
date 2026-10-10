@@ -1,0 +1,164 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BitZero V2 and BitSetter setup and use · Shapeoko workstation</title><style>
+:root{color-scheme:light;font-family:system-ui,-apple-system,sans-serif;color:#24352c;background:#f5f5ef;line-height:1.65}
+*{box-sizing:border-box}body{margin:0}header{background:#203c2c;color:white;padding:22px max(20px,calc((100% - 960px)/2));}header a{color:white;margin-right:22px}header p{margin:8px 0 0;font-size:13px;color:#d3dfd3}
+main{max-width:960px;padding:32px 28px 70px;margin:auto;background:white}h1{font-size:36px;line-height:1.15}h2{margin-top:44px;padding-top:18px;border-top:1px solid #dce2d8;line-height:1.3;scroll-margin-top:20px}a{color:#24613c;text-underline-offset:3px}li{padding:5px 0}strong{font-weight:650}table{width:100%;border-collapse:collapse;font-size:14px;margin:22px 0}td,th{border:1px solid #d6ddcf;padding:12px;text-align:left;vertical-align:top}th{background:#edf2e8}code{background:#edf2e8;padding:2px 4px;overflow-wrap:anywhere}button{font:inherit;cursor:pointer;padding:10px 18px;border:1px solid #c8d5c8;border-radius:6px;background:white;color:#203c2c}nav.toc{background:#edf2e8;padding:18px 24px;border-radius:8px}nav.toc a{display:block;padding:5px 0;font-size:14px}:focus-visible{outline:3px solid #cb8138;outline-offset:3px}
+@media(max-width:600px){main{padding:22px 18px}h1{font-size:29px}table{font-size:12px}td,th{padding:7px;overflow-wrap:anywhere}}
+@media print{header,.toc,.print{display:none}body,main{background:white}main{max-width:none;padding:0;font-size:10pt}h1{font-size:24pt}h2{break-after:avoid;font-size:15pt;margin-top:24px}tr,li{break-inside:avoid}a{color:inherit}table{font-size:9pt}@page{margin:18mm}}
+</style></head><body><header><nav aria-label="Operator guides"><a href="dwp611.html">DWP611 milling</a><a href="jtech-7w.html">J Tech 7W laser</a><a href="bitzero-bitsetter.html">BitZero V2 &amp; BitSetter</a></nav><p>SHAPEOKO 3 XL · OPERATOR HANDBOOK · 2026-10-09</p></header><main><button class="print" onclick="window.print()">Print / save as PDF</button><h1 id="bitzero-v2-and-bitsetter-setup-and-use">BitZero V2 and BitSetter setup and use</h1>
+
+<p><strong>Shapeoko 3 XL · DWP611 · connected BitZero V2 · installed BitSetter</strong></p>
+
+<p>The owner confirmed the BitZero is <strong>V2 and already connected</strong>. Both accessories still need physical commissioning. No homing, probing, offsets, or machine parameters were changed while preparing this guide. The 2020 saved macros are not approved for use.</p>
+
+<nav class="toc" aria-label="On this page"><ul>
+  <li><a href="#bitzero-v2-and-bitsetter-setup-and-use">BitZero V2 and BitSetter setup and use</a>
+  <ul>
+    <li><a href="#1-what-each-accessory-does">1. What each accessory does</a></li>
+    <li><a href="#2-inspect-the-installed-hardware-with-power-isolated">2. Inspect the installed hardware with power isolated</a></li>
+    <li><a href="#3-verify-the-probe-signal-before-allowing-probe-motion">3. Verify the probe signal before allowing probe motion</a></li>
+    <li><a href="#4-establish-the-machine-and-bitsetter-location">4. Establish the machine and BitSetter location</a></li>
+    <li><a href="#5-bitzero-v2-corner-setup">5. BitZero V2 corner setup</a></li>
+    <li><a href="#6-combine-stock-zero-and-tool-length-measurement">6. Combine stock zero and tool-length measurement</a></li>
+    <li><a href="#7-why-the-saved-macros-need-replacement">7. Why the saved macros need replacement</a></li>
+    <li><a href="#8-commissioning-record-and-next-step">8. Commissioning record and next step</a></li>
+  </ul></li>
+</ul>
+</nav><h2 id="1-what-each-accessory-does">1. What each accessory does</h2>
+
+<ul>
+<li><strong>BitZero V2</strong> locates the stock corner (X/Y/Z) or a stock surface (Z only). Its circular bore is part of a V2-specific probing procedure. Do not use a V1 edge-probing routine or generic touch-plate defaults.</li>
+<li><strong>BitSetter</strong> is a fixed tool-length reference. It lets a measured cutter replace a measured probing pin or another cutter without losing the established stock Z zero. It does not locate the stock corner.</li>
+<li><strong>Homing</strong> establishes the machine coordinates needed to revisit BitSetter. A successful probe does not substitute for homing.</li>
+</ul>
+
+<p>For first commissioning, use one tool per G-code file. Automated multi-tool pause/change/resume remains unverified.</p>
+
+<h2 id="2-inspect-the-installed-hardware-with-power-isolated">2. Inspect the installed hardware with power isolated</h2>
+
+<p>Unplug the DWP611 and disable/disconnect laser power. Switch off machine power before opening the electronics enclosure or changing connections. Do not move cables with electronics powered.</p>
+
+<p>Check that BitSetter is firmly mounted and its button moves freely. Check that BitZero's locating edges and insulated bottom are clean and undamaged. Keep both cables out of the cutting and travel envelope.</p>
+
+<p>Carbide's Shapeoko BitZero V2 manual explains using the <strong>probe adapter PCB supplied with BitSetter</strong> when both accessories share the applicable controller connection. Its ports are labeled BitZero/Touch Probe, BitSetter/Tool Probe, and To Carbide Motion. The main-board connection depends on the board revision. Preserve the existing wiring until its adapter and labels are positively identified; do not join wires based on color alone or use a generic passive splitter.</p>
+
+<p>Source: <a href="https://guides.carbide3d.com/files/pdf/BitZero_V2_Shapeoko.pdf">official Shapeoko BitZero V2 manual, installation pages 3–7</a>. Board revisions in that manual have different connection instructions.</p>
+
+<h2 id="3-verify-the-probe-signal-before-allowing-probe-motion">3. Verify the probe signal before allowing probe motion</h2>
+
+<p>With the router unplugged and laser power off, an operator at the machine must first confirm readiness for controller connection; opening serial may reset Grbl. Only one sender may connect. Keep the machine restricted until commissioning is complete; do not bypass badge authorization to gain control.</p>
+
+<p>With both probes untouched, inspect the controller's probe input. For Grbl 1.1 status reports, an active probe is indicated by <strong>P</strong> in the <strong>Pn</strong> field; no P means inactive. A recent status report is required. An accessory LED alone does not prove that the controller sees the input.</p>
+
+<ol>
+<li>Attach BitZero's magnetic grounding lead to the collet nut or conductive probing pin, as described by Carbide. With no axes moving, carefully bring the probe body into contact with the stationary conductive pin/cutter, keeping fingers clear of its edges: its LED should turn red, and the controller probe input should become active.</li>
+<li>Separate them: verify the input returns inactive. Repeat several times.</li>
+<li>Place BitZero where it cannot contact the grounded tool or create an unintended contact. Manually depress BitSetter's button: verify the controller input becomes active; release it and verify it clears.</li>
+<li>Test the two accessories independently. With a shared input, the controller cannot tell which accessory caused contact. Neither may already be triggered when a cycle starts.</li>
+</ol>
+
+<p>Stop if the indication is reversed, stuck, missing, intermittent, or changes when cables move. Investigate wiring, grounding and configuration before motion. Do not change Grbl's probe-invert setting simply to hide an unexplained signal.</p>
+
+<h2 id="4-establish-the-machine-and-bitsetter-location">4. Establish the machine and BitSetter location</h2>
+
+<p>This requires supervised homing and jogging with the operator ready to stop motion. The saved Y travel is <strong>850 mm</strong>, unverified for this shallow Shapeoko 3 XL. Do not use it as evidence of a safe travel envelope.</p>
+
+<p>The legacy Initial Tool Set macro contains these <strong>unverified historical values, not setup instructions</strong>:</p>
+
+<table>
+<thead>
+<tr>
+  <th>Parameter</th>
+  <th>Saved value</th>
+  <th>Required verification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>BitSetter machine X</td>
+  <td>−33 mm</td>
+  <td>Actual button center after homing</td>
+</tr>
+<tr>
+  <td>BitSetter machine Y</td>
+  <td>−373.5 mm</td>
+  <td>Actual button center after homing</td>
+</tr>
+<tr>
+  <td>Initial approach machine Z</td>
+  <td>−30 mm</td>
+  <td>Clearance with the installed pin/tool</td>
+</tr>
+<tr>
+  <td>Travel clearance machine Z</td>
+  <td>−20 mm</td>
+  <td>Entire route, fixtures, stock, tool and Z limits</td>
+</tr>
+<tr>
+  <td>Probe search</td>
+  <td>80 mm at 200 mm/min</td>
+  <td>Replace with a measured, bounded search appropriate to the approach</td>
+</tr>
+</tbody>
+</table>
+
+<p>Record actual machine coordinates over the button, a validated route/clearance height, an approach position and a bounded contact distance. Evaluate the longest and shortest intended tools. A negative machine Z value is not automatically safe. Do not rapid diagonally through fixtures or assume work zero is a safe return destination.</p>
+
+<h2 id="5-bitzero-v2-corner-setup">5. BitZero V2 corner setup</h2>
+
+<p>You currently have <strong>no probing pin</strong>. A clean, conductive, intact flat-end cutter can be used after verifying electrical contact; BitSetter normally measures the installed cutter. For BitZero V2, flutes and cutter orientation can affect contact and repeatability. A smooth probing pin is preferred for accurate X/Y work. Avoid pointed/V-bits, damaged tools and coatings that prevent electrical contact. Do not assume every bit is suitable.</p>
+
+<p>Use a correctly fitted <strong>DWP611-compatible ⅛-inch precision collet</strong> for a ⅛-inch shank; never clamp it in the stock ¼-inch collet. Keep the router unplugged. Attach the magnetic lead to the collet nut and check contact/release with the actual cutter without moving the axes. Keep fingers clear of sharp edges; do not push on a cutting edge. The pin placement instructions below also describe the cutter starting position, but do not eliminate the need to validate the V2 routine and repeatability.</p>
+
+<p>For Carbide's lower-left XYZ corner operation (manual pages 10–12):</p>
+
+<ol>
+<li>Secure the stock and confirm CAM uses that stock corner and top surface as its origin. Confirm the intended work coordinate system, normally G54.</li>
+<li>Seat BitZero V2 on the lower-left stock corner with its locating edges overhanging and pressed against the stock edges. Do not rock it on chips or rounded edges.</li>
+<li>With a commissioned machine, position the pin tip just inside the circular bore, following the manufacturer's starting-position illustration. This is not the same starting point as a V1 edge routine.</li>
+<li>Attach the grounding lead and verify contact/release indication before the cycle.</li>
+<li>Run only a reviewed V2-specific XYZ routine with the correct geometry and clearances. The factory manual's button instructions refer to <strong>Carbide Motion</strong>; they do not mean that selecting a CNCjs page configures an equivalent routine.</li>
+<li>Verify the resulting work zero using a controlled clearance check before cutting. Remove the BitZero and grounding lead from the work envelope.</li>
+</ol>
+
+<p><strong>Current CNCjs status:</strong> no dedicated, commissioned V2 corner routine has been installed. Do not paste a guessed routine or substitute generic touch-plate thickness values. Its cycle and offsets must be validated before first use.</p>
+
+<p>For Z-only probing, the official manual uses different placement: rest the probe on the stock surface and start above its top surface. Do not reuse the corner placement/offset assumptions for Z-only.</p>
+
+<h2 id="6-combine-stock-zero-and-tool-length-measurement">6. Combine stock zero and tool-length measurement</h2>
+
+<p>The first tool is often the smooth probing pin; the cutting tool replaces it afterward. A correct combined workflow must preserve the stock origin through that change:</p>
+
+<ol>
+<li>Home using the commissioned procedure and establish a valid BitSetter reference for the installed pin/tool.</li>
+<li>Probe the stock with BitZero V2 using that same measured pin/tool.</li>
+<li>Before cutting, change to the cutter through the commissioned tool-change workflow and measure it with BitSetter.</li>
+<li>Apply the measured tool-length difference once, with the documented sign and offset method. Preserve stock X/Y and the stock surface datum.</li>
+<li>Verify the cutter's stock Z against an independent reference with the spindle off, then remove the probes/grounding lead from the cutting envelope.</li>
+<li>Set DWP611 speed and power manually only when ready; Start is a separate action.</li>
+</ol>
+
+<p>The tool-length reference must use a coordinate convention unaffected by setting stock work zero, or explicitly reconcile the reference when work offsets change. Do not mix G43.1 tool offsets and G10 work-offset corrections without a designed and tested convention. Restart/reset, loss of homing, a moved router body, missed steps or lost reference invalidates automatic compensation until re-established.</p>
+
+<p>A repeatability test should measure the same pin twice, swap to a cutter and measure it, then return to the original pin and check the original stock datum again. Record observed error against the tolerances required by the job; do not invent a passed calibration from software success messages.</p>
+
+<h2 id="7-why-the-saved-macros-need-replacement">7. Why the saved macros need replacement</h2>
+
+<p>The saved Initial Tool Set and New Tool Set routines date from November 2020. Read-only inspection found:</p>
+
+<ul>
+<li>Initial Tool Set stores <code>TOOL_REFERENCE = posz</code>, a <strong>work-coordinate</strong> value. Setting stock Z afterward with BitZero changes that coordinate frame. New Tool Set subsequently uses that saved number with <code>G10 L20</code>, so that sequence can apply an incorrect stock Z correction.</li>
+<li>New Tool Set declares local clearance/search variables but its moves use the globals created by Initial Tool Set. Those globals can be missing after restart or differ from the apparent local settings.</li>
+<li>The location and long probe search have not been physically validated. Both routines return to work X0/Y0 automatically.</li>
+<li>The routines restore saved spindle/coolant modes. M5 does not switch off a manually powered DWP611, and restoring M3/M4 could energize a future connected output. Probe preparation must require actual tool-power isolation.</li>
+</ul>
+
+<p>Do not run these macros merely because they appear in the UI. They were preserved for inspection, not certified as safe. A replacement needs bounded motion, fresh probe-state checks, a consistent reference/offset model, explicit failure handling and supervised commissioning.</p>
+
+<h2 id="8-commissioning-record-and-next-step">8. Commissioning record and next step</h2>
+
+<p>Track this work as <strong>GMA-728</strong>. Keep it open until both input tests, homing/route checks, the V2 routine, BitSetter reference compensation and the pin–cutter–pin repeatability test are recorded. Guide installation is preparation, not completed physical setup.</p>
+
+<p>For the next supervised session, have the machine accessible, stock/fixtures clear for initial checks, DWP611 unplugged, laser power off, a suitable conductive flat-end cutter (or smooth probing pin) and correct ⅛-inch collet available, and a way to stop the machine immediately. We begin with connection and stationary input checks; homing and each first probing move are separate steps.</p>
+
+<p>Related: <a href="dwp611.html">DWP611 installation and milling</a> · <a href="jtech-7w.html">J Tech 7 W laser</a>. Do not run router probing routines with the laser head as the tool.</p>
+</main></body></html>

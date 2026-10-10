@@ -1,3 +1,4 @@
+import * as fabforge from './api.fabforge';
 import * as version from './api.version';
 import * as state from './api.state';
 import * as gcode from './api.gcode';
@@ -12,6 +13,7 @@ import * as users from './api.users';
 import * as tool from './api.tool';
 
 export {
+  fabforge,
   version,
   state,
   gcode,

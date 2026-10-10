@@ -902,6 +902,60 @@ describe('GrblController', () => {
   });
 
   describe('macro and watchdir', () => {
+    test.each([
+      ['changed content', c => {}, 'G0 Y1', 'MACRO_CHANGED'],
+      ['unreviewed content', c => {}, null, 'MACRO_CHANGED'],
+      ['missing macro', c => {
+ config.get.mockReturnValue([]);
+}, 'G0 X0', 'MACRO_CHANGED'],
+      ['closed port', c => {
+ c.connection.isOpen = false;
+}, 'G0 X0', 'MACHINE_NOT_READY'],
+      ['alarm', c => {
+ c.state.status.activeState = 'Alarm';
+}, 'G0 X0', 'MACHINE_NOT_READY'],
+      ['laser mode', c => {
+ c.settings.settings.$32 = 1;
+}, 'G0 X0', 'MACHINE_NOT_READY'],
+      ['unknown mode', c => {
+ c.settings = {};
+}, 'G0 X0', 'MACHINE_NOT_READY'],
+      ['running workflow', c => {
+ c.workflow.state = 'running';
+}, 'G0 X0', 'MACHINE_NOT_READY'],
+      ['queued commands', c => {
+ c.feeder.feed(['G0 Y0']);
+}, 'G0 X0', 'COMMANDS_PENDING'],
+      ['pending command', c => {
+ c.feeder.state.pending = true;
+}, 'G0 X0', 'COMMANDS_PENDING'],
+      ['held feeder', c => {
+ c.feeder.hold();
+}, 'G0 X0', 'COMMANDS_PENDING'],
+    ])('reviewed macro rejects %s without writing', (name, change, content, code) => {
+      const { controller, writes } = setup({ macros: [{ id: 'm1', content: 'G0 X0' }] });
+      controller.state = { status: { activeState: 'Idle' } };
+      controller.runner.state = controller.state;
+      controller.settings = { settings: { $32: 0 } };
+      change(controller);
+      const callback = jest.fn();
+      controller.command('macro:run-reviewed', 'm1', content, {}, callback);
+      expect(writes).toEqual([]);
+      expect(callback).toHaveBeenCalledWith(expect.objectContaining({ code }));
+    });
+
+    test('reviewed macro submits matching content on an idle milling controller', () => {
+      const { controller, writes } = setup({ macros: [{ id: 'm1', content: 'G0 X0' }] });
+      controller.state = { status: { activeState: 'Idle' } };
+      controller.runner.state = controller.state;
+      controller.settings = { settings: { $32: '0' } };
+      const callback = jest.fn();
+      controller.command('macro:run-reviewed', 'm1', 'G0 X0', {}, callback);
+      flushFeeder(controller);
+      expect(writes.map(write => write.data)).toEqual(['G0 X0\n']);
+      expect(callback).toHaveBeenCalledWith(null);
+    });
+
     test('macro:run feeds the macro content through the feeder', () => {
       const { controller, writes } = setup({
         macros: [{ id: 'm1', name: 'Square', content: 'G0 X0\nG0 Y0' }],

@@ -1,0 +1,4 @@
+# Preserve downloaded evidence byte-for-byte, including original whitespace.
+artifacts/** -text -whitespace
+upstream/** -text -whitespace
+sources/** -text -diff

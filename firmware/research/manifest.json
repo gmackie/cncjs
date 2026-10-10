@@ -1,0 +1,65 @@
+{
+  "retrieved_on": "2026-10-09",
+  "upstream_1_1f_commit": "f51268e8556354a4851a8bdac2b6be7b8d7d5a03",
+  "artifacts": [
+    {
+      "path": "artifacts/carbide-config-2017.h",
+      "url": "https://community.carbide3d.com/uploads/default/original/2X/2/2398cd8fb51211174c855453827a3a9fe48cd778.h",
+      "sha256": "2e060da8b745ed5d3bab19930db4a87d36bd39e373b592531addcde680f43de0",
+      "bytes": 43281
+    },
+    {
+      "path": "artifacts/carbide-v4-grbl.hex",
+      "url": "https://web.archive.org/web/20190716202402id_/http://carbide3d.com/dl/v4/grbl.hex",
+      "sha256": "6766b8829e2f01321e9822399879d0994d5747b07b4fba1dfb697157a3802d6c",
+      "bytes": 89788
+    },
+    {
+      "path": "artifacts/upstream-1.1f-20170131.hex",
+      "url": "https://github.com/gnea/grbl/releases/download/v1.1f.20170131/grbl_v1.1f.20170131.hex",
+      "sha256": "39cbd276e3101d19567b18c6c8c746cadddbfaeb1018f2fec9273e3cf11720a4",
+      "bytes": 85350
+    },
+    {
+      "path": "artifacts/upstream-1.1h-20190825.hex",
+      "url": "https://github.com/gnea/grbl/releases/download/v1.1h.20190825/grbl_v1.1h.20190825.hex",
+      "sha256": "1198b33233d0d89e5798916b1d3125d16dd520bf10cfaa44caaee6074673165d",
+      "bytes": 84163
+    },
+    {
+      "path": "upstream/config-1.1f.h",
+      "url": "https://raw.githubusercontent.com/gnea/grbl/v1.1f.20170131/grbl/config.h",
+      "sha256": "83e2ae3100a015645a272ec7a24bdfbf6294cd5d257a349350a5d452bbf36c1a",
+      "bytes": 43293
+    },
+    {
+      "path": "upstream/cpu-map-1.1f.h",
+      "url": "https://raw.githubusercontent.com/gnea/grbl/v1.1f.20170131/grbl/cpu_map.h",
+      "sha256": "24bc9fa430533f2343145584486076a4ddc198da15ea9e6463ce79dbb6be282b",
+      "bytes": 7224
+    },
+    {
+      "path": "upstream/COPYING",
+      "url": "https://raw.githubusercontent.com/gnea/grbl/v1.1f.20170131/COPYING",
+      "sha256": "2ba31531c9ede6be00419fefcd8c8599b02685da8bc1c65962f068152db8ba82",
+      "bytes": 35298
+    },
+    {
+      "path": "sources/grbl-1.1f.tar.gz",
+      "url": "https://codeload.github.com/gnea/grbl/tar.gz/refs/tags/v1.1f.20170131",
+      "sha256": "227a1d9461f221242b98c472e4fd569d50ee01eebb411265fe20362a3fbb486b",
+      "bytes": 406901
+    },
+    {
+      "path": "sources/grbl-1.1h.tar.gz",
+      "url": "https://codeload.github.com/gnea/grbl/tar.gz/refs/tags/v1.1h.20190825",
+      "sha256": "a138a999e891829b01adf68dc2b374fd4b94c639a02a0444afdbf9952fbdbb9b",
+      "bytes": 253889
+    }
+  ],
+  "toolchain": {
+    "url": "https://downloads.arduino.cc/tools/avr-gcc-7.3.0-atmel3.6.1-arduino7-x86_64-apple-darwin14.tar.bz2",
+    "sha256": "f6ed2346953fcf88df223469088633eb86de997fa27ece117fd1ef170d69c1f8",
+    "stored_in_repository": false
+  }
+}

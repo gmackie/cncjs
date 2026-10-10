@@ -1,0 +1,38 @@
+// Shared workshop palette and touch targets across the existing controls.
+body {
+    background-color: #f4f5f2;
+}
+.btn {
+    border-radius: 6px;
+    touch-action: manipulation;
+}
+.btn-primary {
+    background-color: #24533f;
+    border-color: #24533f;
+    &:hover, &:focus, &:active {
+        background-color: #193e2d;
+        border-color: #193e2d;
+    }
+}
+.form-control {
+    border-radius: 6px;
+    border-color: #cdd5cf;
+    &:focus {
+        border-color: #477352;
+        box-shadow: 0 0 0 2px rgba(71, 115, 82, .16);
+    }
+}
+button:focus-visible, a:focus-visible {
+    outline: 3px solid #bd6d26;
+    outline-offset: 2px;
+}
+@media (pointer: coarse) {
+    .btn, .btn.btn-sm, .btn.btn-xs {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    .form-control {
+        min-height: 44px;
+        font-size: 16px;
+    }
+}

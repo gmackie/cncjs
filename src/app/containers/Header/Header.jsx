@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import React, { PureComponent } from 'react';
 import { Navbar } from 'react-bootstrap';
@@ -44,7 +45,8 @@ const MenuItemLink = styled(Anchor)`
 
 class Header extends PureComponent {
   static propTypes = {
-    ...withRouter.propTypes
+    ...withRouter.propTypes,
+    canControl: PropTypes.bool
   };
 
   state = this.getInitialState();
@@ -82,6 +84,9 @@ class Header extends PureComponent {
       }
     },
     fetchCommands: async () => {
+      if (!this.props.canControl) {
+ return;
+}
       try {
         const res = await api.commands.fetch({ paging: false });
         const { records: commands } = res.body;
@@ -266,7 +271,7 @@ class Header extends PureComponent {
     const sessionEnabled = store.get('session.enabled');
     const signedInName = store.get('session.name');
     const hideUserDropdown = !sessionEnabled;
-    const showCommands = commands.length > 0;
+    const showCommands = this.props.canControl && commands.length > 0;
 
     return (
       <Navbar
@@ -339,7 +344,7 @@ class Header extends PureComponent {
               columnGap: '8px',
             }}
           >
-            {location.pathname === '/workspace' && (
+            {this.props.canControl && location.pathname === '/workspace' && (
               <QuickAccessToolbar state={this.state} actions={this.actions} />
             )}
             <div

@@ -1,0 +1,16 @@
+[Unit]
+Description=Shapeoko touchscreen appliance
+After=cncjs-shop.service display-manager.service
+Wants=cncjs-shop.service
+
+[Service]
+Type=simple
+User=pi
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/pi/.Xauthority
+ExecStart=/bin/sh /home/pi/cncjs-upgrade/start-kiosk.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=graphical.target

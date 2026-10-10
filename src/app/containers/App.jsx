@@ -1,68 +1,48 @@
 import React, { PureComponent } from 'react';
-import { Redirect, withRouter } from 'react-router-dom';
-import { trackPage } from '../lib/analytics';
-import Header from './Header';
-import Sidebar from './Sidebar';
-import Workspace from './Workspace';
-import Settings from './Settings';
-import styles from './App.styl';
+import { withRouter } from 'react-router-dom';
+import { operatorAccess } from 'app/api';
+import Shapeoko from './Shapeoko/Shapeoko';
 
 class App extends PureComponent {
-    static propTypes = {
-      ...withRouter.propTypes
-    };
+  static propTypes = {
+    ...withRouter.propTypes,
+  };
 
-    render() {
-      const { location } = this.props;
-      const accepted = ([
-        '/workspace',
-        '/settings',
-        '/settings/general',
-        '/settings/workspace',
-        '/settings/machine-profiles',
-        '/settings/user-accounts',
-        '/settings/controller',
-        '/settings/commands',
-        '/settings/events',
-        '/settings/about'
-      ].indexOf(location.pathname) >= 0);
+  state = { access: null, accessError: '' };
 
-      if (!accepted) {
-        return (
-          <Redirect
-            to={{
-              pathname: '/workspace',
-              state: {
-                from: location
-              }
-            }}
-          />
-        );
+  componentDidMount() {
+    this.refreshAccess();
+  }
+  componentWillUnmount() {
+    this.unmounted = true;
+    clearTimeout(this.accessTimer);
+  }
+  refreshAccess = async () => {
+    try {
+      const access = await operatorAccess();
+      if (!this.unmounted) {
+        this.setState({ access, accessError: '' });
       }
-
-      trackPage(location.pathname);
-
-      return (
-        <div>
-          <Header {...this.props} />
-          <aside className={styles.sidebar} id="sidebar">
-            <Sidebar {...this.props} />
-          </aside>
-          <div role="main" className={styles.main}>
-            <div className={styles.content}>
-              <Workspace
-                {...this.props}
-                style={{
-                  display: (location.pathname !== '/workspace') ? 'none' : 'block'
-                }}
-              />
-              {location.pathname.indexOf('/settings') === 0 &&
-                <Settings {...this.props} />}
-            </div>
-          </div>
-        </div>
-      );
+    } catch (err) {
+      if (!this.unmounted) {
+        this.setState({ access: null, accessError: err.message });
+      }
+    } finally {
+      if (!this.unmounted) {
+        this.accessTimer = setTimeout(this.refreshAccess, 5000);
+      }
     }
+  };
+  render() {
+    return (
+      <Shapeoko
+        location={this.props.location}
+        access={this.state.access}
+        error={this.state.accessError}
+        onAccessChange={(access) => this.setState({ access, accessError: '' })}
+      />
+    );
+  }
 }
 
 export default withRouter(App);
