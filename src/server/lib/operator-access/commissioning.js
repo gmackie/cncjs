@@ -128,7 +128,7 @@ export const createCommissioning = ({ controllers, access, now = Date.now, port 
           state.candidate = { position, at: new Date(now()).toISOString(), verified: false };
         } else {
           const { axis, distance, feed } = input;
-          if (!['X', 'Y', 'Z'].includes(axis) || ![0.1, 1, 10].includes(Math.abs(distance)) || ![100, 300, 600].includes(feed) || (axis === 'Z' && (Math.abs(distance) > 1 || feed > 100))) {
+          if (!['X', 'Y', 'Z'].includes(axis) || ![0.1, 1, 10, 25, 50, 100].includes(Math.abs(distance)) || ![100, 300, 600].includes(feed) || (axis === 'Z' && (Math.abs(distance) > 1 || feed > 100))) {
  fail('Use a permitted single-axis step and feed. Z is limited to 1 mm at 100 mm/min.');
 }
           const target = { ...position, [axis.toLowerCase()]: position[axis.toLowerCase()] + distance };

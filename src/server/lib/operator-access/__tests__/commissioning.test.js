@@ -44,7 +44,7 @@ test('home must be observed complete before a jog; duplicate clicks cannot queue
 });
 test.each([
   { action: 'jog', axis: 'X\nM3', distance: 1, feed: 100 },
-  { action: 'jog', axis: 'X', distance: 50, feed: 100 },
+  { action: 'jog', axis: 'X', distance: 200, feed: 100 },
   { action: 'jog', axis: 'Z', distance: -10, feed: 100 },
   { action: 'jog', axis: 'Z', distance: -1, feed: 600 },
   { action: 'jog', axis: 'X', distance: 10, feed: 100 },
@@ -78,5 +78,25 @@ test.each(['stale', 'probe', 'laser', 'workflow', 'queue', 'alarm'])('rejects %s
  controller.runner.emit('alarm'); report.activeState = 'Alarm';
 }
   await expect(service.act('token', { action: 'jog', axis: 'X', distance: -1, feed: 100 })).rejects.toThrow();
+  expect(controller.writeln).not.toHaveBeenCalled();
+});
+
+// Coarse XY moves retain the same completion lock and endpoint validation.
+test.each([25, 50, 100])('permits %imm XY steps and keeps Z constrained', async distance => {
+  const { service, controller, home, report } = setup();
+  await home();
+  await service.act('token', { action: 'jog', axis: 'X', distance: -distance, feed: 300 });
+  expect(controller.writeln).toHaveBeenLastCalledWith(`$J=G91 G21 X-${distance} F300`);
+  await expect(service.act('token', { action: 'jog', axis: 'Y', distance: -distance, feed: 300 })).rejects.toThrow('finish');
+  controller.runner.emit('ok');
+  report.mpos.x = String(-3 - distance);
+  controller.runner.emit('status', report);
+  await service.act('token', { action: 'jog', axis: 'Y', distance: -distance, feed: 300 });
+  expect(controller.writeln).toHaveBeenLastCalledWith(`$J=G91 G21 Y-${distance} F300`);
+  controller.runner.emit('ok');
+  report.mpos.y = String(-3 - distance);
+  controller.runner.emit('status', report);
+  controller.writeln.mockClear();
+  await expect(service.act('token', { action: 'jog', axis: 'Z', distance: -distance, feed: 100 })).rejects.toThrow('Z is limited');
   expect(controller.writeln).not.toHaveBeenCalled();
 });

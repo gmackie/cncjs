@@ -195,7 +195,7 @@ in this connection before jog or position capture is accepted. Restart/reset/ala
 invalidates the reference. Keep the browser/backend connection open while aligning;
 there is no automatic connection or homing on page load.
 
-XY steps are 0.1, 1 or 10 mm at 100, 300 or 600 mm/min. Z steps are at most 1 mm at
+XY steps are 0.1, 1, 10, 25, 50 or 100 mm at 100, 300 or 600 mm/min. Z steps are at most 1 mm at
 100 mm/min. Each click is one move; subsequent requests wait for completion. Server
 checks require fresh Grbl status, idle workflow, no loaded job/queued feeder work,
 milling mode and inactive probe/limit inputs (homing allows asserted limit inputs).

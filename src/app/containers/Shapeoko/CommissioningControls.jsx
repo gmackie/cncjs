@@ -115,7 +115,7 @@ export default class CommissioningControls extends PureComponent {
         <p>Connection can reset Grbl. Home after connecting. Cancel jog does not stop homing; use the physical stop if needed. Camera and feed hold are not emergency stops.</p>
         {confirmHome && <div role="alert"><p>Home moves Z, then X/Y to their switches. Confirm the entire homing path is clear.</p><button type="button" disabled={busy || !active || !ready} onClick={() => this.act({ action: 'home', ready: true })}>Confirm · home machine</button><button type="button" onClick={() => this.setState({ confirmHome: false })}>Back</button></div>}
         <div className={styles.actions}>
-          <label>XY step <select value={step} onChange={e => this.setState({ step: Number(e.target.value) })}>{[0.1, 1, 10].map(n => <option key={n} value={n}>{n} mm</option>)}</select></label>
+          <label>XY step <select value={step} onChange={e => this.setState({ step: Number(e.target.value) })}>{[0.1, 1, 10, 25, 50, 100].map(n => <option key={n} value={n}>{n} mm</option>)}</select></label>
           <label>XY feed <select value={feed} onChange={e => this.setState({ feed: Number(e.target.value) })}>{[100, 300, 600].map(n => <option key={n} value={n}>{n} mm/min</option>)}</select></label>
         </div>
         <div className={styles.actions}>
