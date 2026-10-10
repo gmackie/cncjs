@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { createCommissioning } from './commissioning';
 import { isKiosk, kioskEnabled } from '../kiosk';
 import access from './service';
 import machineMonitor from '../fabforge/machine-monitor';
@@ -9,6 +10,7 @@ import { configuration } from '../fabforge/client';
 import { createProduction } from '../fabforge/production';
 
 const fabforge = createService();
+const commissioning = createCommissioning({ controllers: () => store.get('controllers', {}), access });
 const production = createProduction({ access });
 const sha256 = (value) => crypto.createHash('sha256').update(value).digest('hex');
 export const tokenFrom = (req) => req.get('X-CNCjs-Operator') || '';
@@ -37,6 +39,10 @@ const respond = (action) => async (req, res) => {
 let usageTimer;
 let monitorTimer;
 export const installRoutes = (app, prefix) => {
+  app.get(`${prefix}/operator-access/commissioning`, respond(() => commissioning.status()));
+  app.post(`${prefix}/operator-access/commissioning/session`, respond(req => access.startCommissioning(tokenFrom(req), req.body.ready)));
+  app.delete(`${prefix}/operator-access/commissioning/session`, respond(req => access.endCommissioning(tokenFrom(req))));
+  app.post(`${prefix}/operator-access/commissioning/action`, respond(req => commissioning.act(tokenFrom(req), req.body)));
   if (!monitorTimer) {
     monitorTimer = setInterval(() => machineMonitor.sync(), 15000);
     monitorTimer.unref();
@@ -169,6 +175,12 @@ export const socketGate = (socket, service = access, reviewService = fabforge, c
       return;
     }
     try {
+      if (event === 'open' && command && command.commissioning === true) {
+        await commissioning.open(socket.operatorToken, port, command);
+        packet[2] = { controllerType: 'Grbl', baudrate: 115200 };
+        next();
+        return;
+      }
       if (!['open', 'close', 'command', 'write', 'writeln'].includes(event)) {
         throw new Error('Unsupported operator action.');
       }

@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import get from 'lodash/get';
 import { Link } from 'react-router-dom';
 import MachineControls from './MachineControls';
+import CommissioningControls from './CommissioningControls';
 import { probeTelemetry } from './probe-telemetry';
 import styles from './index.styl';
 
@@ -103,14 +104,16 @@ export default class ProbeSetup extends PureComponent {
             </section>
           </div>
         </div>
-        <section className={styles.setupControls} aria-label="Setup machine controls">
-          <h2>Connection & positioning</h2>
-          <p>Badge authorization and machine availability are required. Connect and Home ask for confirmation; jog buttons move immediately. Zero buttons set the current position as G54 zero—they do not probe the stock.</p>
-          <MachineControls
-            key={canOperate ? 'operator' : 'viewer'} machine={machine} fresh={fresh && telemetry.available}
-            canOperate={canOperate} access={access} setupOnly
-          />
-        </section>
+        {workflow ? <CommissioningControls machine={machine} fresh={fresh} access={access} /> : (
+          <section className={styles.setupControls} aria-label="Setup machine controls">
+            <h2>Connection & positioning</h2>
+            <p>Badge authorization and machine availability are required. Connect and Home ask for confirmation; jog buttons move immediately. Zero buttons set the current position as G54 zero—they do not probe the stock.</p>
+            <MachineControls
+              key={canOperate ? 'operator' : 'viewer'} machine={machine} fresh={fresh && telemetry.available}
+              canOperate={canOperate} access={access} setupOnly
+            />
+          </section>
+)}
         <section className={styles.panel} aria-label="Detailed operator handbook">
           <span className={styles.eyebrow}>INSTALLATION / SETUP / DAILY USE</span>
           <h2>Operator handbook</h2>

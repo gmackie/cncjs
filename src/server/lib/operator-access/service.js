@@ -101,6 +101,8 @@ export const createAccess = ({
           }
           resource = found;
           current.grantExpiresAt = Date.parse(grant.expiresAt);
+          current.commissioningAllowed = grant.commissioning === true;
+          current.commissioningOnly = grant.commissioningOnly === true;
           lastCheck = now();
         } catch (err) {
           if (lease === current) {
@@ -140,12 +142,15 @@ export const createAccess = ({
           )
         : null,
       release: mine ? lease.release : null,
-      machineAvailable: mine && resource.status === 'available',
+      machineAvailable: mine && !lease.commissioningOnly && !(lease.commissioningUntil > now()) && resource.status === 'available',
+      commissioningAllowed: mine && lease.commissioningAllowed,
+      commissioningOnly: mine && lease.commissioningOnly,
+      commissioningUntil: mine && lease.commissioningAllowed && lease.commissioningUntil > now() ? lease.commissioningUntil : null,
     };
   };
   const requireOperator = async (
     token,
-    { motion = false, touch = true } = {}
+    { motion = false, touch = true, commissioning = false } = {}
   ) => {
     if (!enabled()) {
       return null;
@@ -153,6 +158,9 @@ export const createAccess = ({
     await check();
     if (!owner(token)) {
       fail('Viewer mode. Badge in with machine authorization to continue.');
+    }
+    if (!commissioning && (lease.commissioningOnly || lease.commissioningUntil > now())) {
+      fail('Commissioning access cannot operate production controls.');
     }
     if (motion && resource.status !== 'available') {
       fail(
@@ -170,6 +178,33 @@ export const createAccess = ({
     status,
     check,
     requireOperator,
+    async startCommissioning(token, ready) {
+      const current = await requireOperator(token, { commissioning: true });
+      if (!current || !current.commissioningAllowed || ready !== true) {
+        fail('Machine-specific commissioning authorization and physical readiness are required.');
+      }
+      if (current.release) {
+        fail('Badge out of the released job before commissioning.', 409);
+      }
+      record('commissioning_started');
+      current.commissioningUntil = Math.min(now() + 30 * 60 * 1000, current.expiresAt, current.grantExpiresAt);
+      return status(token);
+    },
+    async requireCommissioning(token) {
+      const current = await requireOperator(token, { commissioning: true });
+      if (!current || !current.commissioningAllowed || !(current.commissioningUntil > now())) {
+        fail('Start an authorized commissioning session first.');
+      }
+      return current;
+    },
+    async endCommissioning(token) {
+      const current = await requireOperator(token, { commissioning: true });
+      if (current) {
+ current.commissioningUntil = 0;
+}
+      record('commissioning_ended');
+      return status(token);
+    },
     monitoring() {
       expire();
       return {
@@ -227,6 +262,9 @@ export const createAccess = ({
           lastUsed: now(),
           expiresAt: now() + 8 * 60 * 60 * 1000,
           grantExpiresAt: Date.parse(grant.expiresAt),
+          commissioningAllowed: grant.commissioning === true,
+          commissioningOnly: grant.commissioningOnly === true,
+          commissioningUntil: 0,
           release: null,
         };
         record('session_started', {
@@ -242,7 +280,7 @@ export const createAccess = ({
       }
     },
     async badgeOut(token) {
-      await requireOperator(token, { touch: false });
+      await requireOperator(token, { touch: false, commissioning: true });
       end('badge_out');
       return status('');
     },

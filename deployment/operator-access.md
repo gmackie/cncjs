@@ -175,3 +175,37 @@ a stale healthy state. Restore the journal/cursor pair before continuing.
 Verified with 671 passing tests, a production UI build, and a localhost badge
 session whose event was acknowledged by the fixture with zero pending bytes.
 Production remains restricted; no synthetic production events were created.
+
+## Supervised commissioning on a restricted machine
+
+A machine administrator may grant `commissioning: true` on a machine-specific
+badge grant. Temporary typed setup codes must also use `commissioningOnly: true`
+and a short expiry. These flags are read from FabForge on badge-in and revalidated
+with the normal lease. The latter flag denies all production actions even if the
+resource later becomes available. Revocation uses the normal disabled/expired grant.
+Do not re-enroll this temporary badge through the generic enrollment form: that
+form does not preserve these commissioning flags. Replace it with a real operator
+badge only after qualification and commissioning are complete.
+
+Configure `CNCJS_COMMISSIONING_PORT` to the exact stable `/dev/serial/by-id/...`
+path. Open **Commissioning**, badge in (a typed enrolled code works without RFID),
+confirm tool-power isolation and clearance, and begin a 30-minute setup session.
+Connect and Home are separate deliberate actions. Homing must be observed complete
+in this connection before jog or position capture is accepted. Restart/reset/alarm
+invalidates the reference. Keep the browser/backend connection open while aligning;
+there is no automatic connection or homing on page load.
+
+XY steps are 0.1, 1 or 10 mm at 100, 300 or 600 mm/min. Z steps are at most 1 mm at
+100 mm/min. Each click is one move; subsequent requests wait for completion. Server
+checks require fresh Grbl status, idle workflow, no loaded job/queued feeder work,
+milling mode and inactive probe/limit inputs (homing allows asserted limit inputs).
+Positive moves stop short of the home switches; negative travel remains physically
+unverified and must be supervised. These are incremental positioning controls, not
+calibrated soft limits. Cancel jog does not cancel homing; use the physical stop for
+an unsafe homing move. Feed hold remains available to viewers.
+
+Align over the actual **front-left BitSetter** and capture its candidate position.
+The journal records machine coordinates without applying offsets or enabling any
+probe cycle. It remains unverified until clearance, bounded probing and repeatability
+are checked. Job Start, raw G-code, macros, work-zero changes, spindle and laser output
+are not part of this setup surface. End setup/badge out when finished.

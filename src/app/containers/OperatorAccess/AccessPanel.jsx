@@ -57,8 +57,7 @@ export default class AccessPanel extends PureComponent {
           )}
           {authorized && !access.machineAvailable && (
             <p>
-              Machine restricted in FabForge. Setup release and motion are
-              locked.
+              Machine restricted in FabForge. Production is locked. Authorized setup controls are on the Commissioning page.
             </p>
           )}
         </div>

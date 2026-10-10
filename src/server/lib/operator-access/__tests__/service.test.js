@@ -210,3 +210,35 @@ test('delayed expiry inspection does not overcount operator access time', async 
   expect(access.status(session.token).authorized).toBe(false);
   expect(audit).toHaveBeenLastCalledWith(expect.objectContaining({ type: 'session_ended', durationMs: 15 * 60000 }));
 });
+
+test('temporary commissioning badge never grants production access, even on available resource', async () => {
+  const { access, resource, advance } = setup();
+  Object.assign(resource.policy.cncjsAccess.grants[0], { commissioning: true, commissioningOnly: true });
+  const session = await access.badgeIn('12345678');
+  expect(session.machineAvailable).toBe(false);
+  await expect(access.requireCommissioning(session.token)).rejects.toThrow('Start');
+  await access.startCommissioning(session.token, true);
+  await expect(access.requireCommissioning(session.token)).resolves.toBeTruthy();
+  await expect(access.requireOperator(session.token, { motion: true })).rejects.toThrow('production');
+  await expect(access.release(session.token, review)).rejects.toThrow('production');
+  advance(10 * 60 * 1000);
+  await access.requireCommissioning(session.token);
+  advance(10 * 60 * 1000);
+  await access.requireCommissioning(session.token);
+  advance(10 * 60 * 1000);
+  await expect(access.requireCommissioning(session.token)).rejects.toThrow('Start');
+  await access.badgeOut(session.token);
+});
+test('ordinary operator grant cannot commission a restricted machine; capability revocation locks setup', async () => {
+  const { access, resource, advance } = setup();
+  const grant = resource.policy.cncjsAccess.grants[0];
+  resource.status = 'restricted';
+  const session = await access.badgeIn('12345678');
+  await expect(access.startCommissioning(session.token, true)).rejects.toThrow('authorization');
+  grant.commissioning = true;
+  advance(16000);
+  await access.startCommissioning(session.token, true);
+  grant.commissioning = false;
+  advance(16000);
+  await expect(access.requireCommissioning(session.token)).rejects.toThrow('Start');
+});
