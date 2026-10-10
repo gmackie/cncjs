@@ -118,7 +118,7 @@ class Settings extends PureComponent {
                       this.setState({ mediaSource: MEDIA_SOURCE_LOCAL });
                     }}
                   />
-                  {i18n._('Use a built-in camera or a connected webcam')}
+                  {i18n._('Use a camera connected to this browser device')}
                 </label>
               </div>
               <div style={{ marginLeft: 20 }}>
@@ -147,21 +147,29 @@ class Settings extends PureComponent {
                       this.setState({ mediaSource: MEDIA_SOURCE_STREAM });
                     }}
                   />
-                  {i18n._('Connect to an IP camera')}
+                  {i18n._('Use a network camera stream')}
                 </label>
               </div>
               <div style={{ marginLeft: 20 }}>
+                <button
+                  type="button"
+                  className="btn btn-default"
+                  style={{ marginBottom: 10 }}
+                  onClick={() => this.setState({ mediaSource: MEDIA_SOURCE_STREAM, url: 'camera/?action=stream' })}
+                >
+                  {i18n._('Raspberry Pi USB camera')}
+                </button>
                 <input
-                  type="url"
+                  type="text"
                   className="form-control"
                   disabled={mediaSource !== MEDIA_SOURCE_STREAM}
                   placeholder="http://0.0.0.0:8080/?action=stream"
-                  defaultValue={url}
+                  value={url}
                   onChange={this.handleChangeURL}
                 />
                 <Margin top={4}>
                   <MutedText style={{ marginTop: 4 }}>
-                    {i18n._('The URL should point to a stream in one of the following formats: Motion JPEG (mjpeg), RTSP, or H264 (MP4).')}
+                    {i18n._('Use an HTTP Motion JPEG stream or a browser-playable MP4 URL. RTSP requires a separate gateway. A Pi USB camera must be served by the Pi, not by browser camera access.')}
                   </MutedText>
                 </Margin>
               </div>

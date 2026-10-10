@@ -141,11 +141,12 @@ class Login extends PureComponent {
           )}
           <div className={styles.login}>
             <div className={styles.logo}>
-              <img src="images/logo-square-256x256.png" alt="" />
+              <strong>SHAPEOKO 3 XL</strong>
             </div>
             <div className={styles.title}>
-              {i18n._('Sign in to {{name}}', { name: settings.productName })}
+              Workshop sign in
             </div>
+            <p>Use your workshop account for remote viewing. At the machine, the kiosk opens in viewer mode; badge in for machine controls.</p>
             <form className={styles.form}>
               <div className="form-group">
                 <input

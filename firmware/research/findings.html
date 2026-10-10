@@ -1,0 +1,43 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Shapeoko firmware evidence</title>
+<style>body{margin:0;font:15px/1.55 var(--font-sans,system-ui);color:var(--foreground,#202124);background:var(--background,#fff)}h1{font-size:23px}h2{font-size:18px;margin-top:26px}a{color:var(--accent,#1261a0)}code{font-size:.9em;overflow-wrap:anywhere}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:9px 7px;border-bottom:1px solid var(--border,#ccc);vertical-align:top}th{font-weight:600}details{margin:18px 0;padding:12px;background:var(--secondary,#f4f5f6);border-radius:6px}summary{cursor:pointer;font-weight:600}.muted{color:var(--muted-foreground,#555)}.table{overflow-x:auto}li{margin:8px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere}</style>
+<h1>Shapeoko: a buildable firmware baseline</h1>
+<p>Carbide used a shared Grbl image with machine-specific settings applied afterward. Its firmware author explicitly confirms <a href="https://community.carbide3d.com/t/grbl-1-1-changes-from-stock/4559">one HEX for three machines and configuration-only changes</a>. The published configuration targets the ATmega328P and uses generic defaults, rather than hard-coding XL travel.</p>
+<p class="muted">Local analysis · 9 October 2026 · No controller connection or flashing</p>
+<h2>Downloaded and validated</h2>
+<div class="table"><table><thead><tr><th>Image</th><th>Embedded version</th><th>Application bytes</th></tr></thead><tbody>
+<tr><td><a href="https://web.archive.org/web/20190716202402id_/http://carbide3d.com/dl/v4/grbl.hex">Archived Carbide v4</a></td><td>1.1f.20170131</td><td>31,920</td></tr>
+<tr><td><a href="https://github.com/gnea/grbl/releases/tag/v1.1f.20170131">Upstream 1.1f</a></td><td>1.1f.20170131</td><td>30,338</td></tr>
+<tr><td><a href="https://github.com/gnea/grbl/releases/tag/v1.1h.20190825">Upstream 1.1h</a></td><td>1.1h.20190825</td><td>29,920</td></tr></tbody></table></div>
+<p>All records have valid Intel HEX checksums and EOF markers. Each image is contiguous from address zero. Carbide occupies <code>0x0000–0x7CAF</code>. It leaves 848 bytes below the chip’s 32 KiB ceiling; the installed bootloader reservation is still unknown. These are application images, not full controller backups.</p>
+<p>Your previously inspected controller reports <code>1.1f.20170131</code> and <code>[OPT:VNPR,14,128]</code>. This is consistent with the published configuration: variable spindle, line numbers, parking, parking override, 14 usable planner blocks, and 128-byte serial RX buffer. It does <strong>not establish binary identity</strong>; that requires a controller readback. The original vendor HEX URL is now 404, so the Carbide copy has archive provenance rather than a current vendor distribution.</p>
+<h2>Six configuration changes from stock 1.1f</h2>
+<div class="table"><table><thead><tr><th>Change</th><th>Practical effect</th></tr></thead><tbody>
+<tr><td>Line numbers enabled</td><td>Reported line tracking; planner storage drops to 15 blocks, with 14 usable.</td></tr>
+<tr><td>Safety-door input enabled</td><td>The shared feed-hold input becomes a safety-door input. Software feed hold and the physical door input must be tested separately.</td></tr>
+<tr><td>Minimum PWM = 5</td><td>Minimum nonzero output is 5/255, about 1.96% duty. Stock defaults to 1/255. S0 still turns output off under the saved $30=1000, $31=0 range.</td></tr>
+<tr><td>Restore-all mask changed</td><td>Parameter storage is excluded from the “restore all” mask. Coordinate/probe-related stored parameters cannot be assumed cleared by a generic reset procedure.</td></tr>
+<tr><td>Z parking enabled</td><td>Configured target Z−5 mm; pullout 5 mm at 100 mm/min, then parking at 500 mm/min, subject to runtime conditions. Parking is suppressed in laser mode.</td></tr>
+<tr><td>Parking override enabled</td><td>M56 controls parking behavior; parking is active at initialization in this config.</td></tr>
+</tbody></table></div>
+<p>Evidence: direct diff of Carbide’s <a href="https://community.carbide3d.com/uploads/default/original/2X/2/2398cd8fb51211174c855453827a3a9fe48cd778.h">published config</a> against the pinned upstream 1.1f config. These are source-level findings, not six independently proven properties of the archived or installed binary.</p>
+<h2>What this means for your machine</h2>
+<ul><li><strong>DWP611:</strong> Grbl cannot adjust its speed dial. A suitable external interface can switch router power; firmware PWM alone does not provide router speed control.</li>
+<li><strong>J Tech 7 W:</strong> Grbl 1.1 already supports laser mode and dynamic M4 power. With the published Carbide config and saved S range, S1 maps to PWM 5/255 and S100 to 30/255 (about 11.76% duty), at 100% override. Duty cycle is not measured optical power. Calibrate low-power behavior during commissioning; no flash is inherently required just to enable laser operation.</li>
+<li><strong>BitSetter:</strong> tool-length measurement and operator sequencing can remain in the CNCjs workflow. A firmware fork is not required merely to orchestrate probing.</li>
+<li><strong>FabForge and badges:</strong> authorization, job release, camera and simulation belong on the Pi/server. Keep the microcontroller focused on timing, motion and tool outputs.</li></ul>
+<details><summary>Internal pin mapping and limits</summary>
+<p>The published config selects the upstream ATmega328P map. At the MCU/Arduino naming level: steps D2/D3/D4; directions D5/D6/D7; stepper disable D8; X/Y/Z limits D9/D10/D12 with variable spindle; PWM D11; spindle direction D13; reset A0; safety door A1; cycle start A2; probe A5.</p>
+<p>These are logical MCU assignments, <strong>not identified connector positions on your board</strong>. Board routing, input conditioning, driver revision, grounding and external interlocks still require physical verification. Firmware safety-door handling is not an independent hardware emergency stop.</p>
+<p>Homing is Z first, then X and Y together. Saved Y travel is 850 mm, which remains unverified for your shallow XL. No travel or probe parameters were changed.</p></details>
+<h2>Local compilation succeeds</h2>
+<p>Using pinned upstream 1.1f source plus the unmodified Carbide config, AVR GCC 7.3.0 produces <strong>31,548 bytes of flash and 1,665 bytes of static SRAM</strong>. That leaves 383 bytes of the 2 KiB SRAM for stack and remaining runtime needs; it is not a measured worst-case margin.</p>
+<p>This build differs from the 31,920-byte archived image. Compiler version/options or source differences can change the result. The original build environment is unknown, so this is a research baseline, not a reproduced vendor release.</p>
+<details><summary>Reproduce the analysis</summary><pre>python3 firmware/research/analyze.py
+python3 -m unittest discover -s firmware/research -p 'test_*.py'
+# With the verified AVR toolchain on PATH:
+sh firmware/research/build-local.sh
+avr-objdump -b ihex -m avr5 -D firmware/research/artifacts/carbide-v4-grbl.hex</pre>
+<p>The repository retains source archives, original configuration, GPL license, download manifest, SHA-256 hashes, validation tests, and a compile-only script. Disassembly succeeds, but raw HEX lacks function symbols and includes embedded data. Local ELF symbols cannot be mapped directly onto the archived binary.</p></details>
+<h2>Next firmware milestone</h2>
+<p>Recover the original compiler/build recipe and test whether it reproduces the archived image. Before any machine installation, establish flash/EEPROM/bootloader/fuse backup and recovery, verify the physical board interfaces, and bench-test pause, door, reset, probe and laser-output behavior with tools disconnected. The installed firmware remains unchanged.</p>
+</html>
